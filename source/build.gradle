@@ -1,5 +1,5 @@
 apply plugin: 'groovy'
-apply from: "./upload.gradle"
+//apply from: "./upload.gradle"
 
 buildscript {
     repositories {

@@ -94,7 +94,7 @@ class VariantProcessor {
                 return
             }
 
-            FatUtils.logAnytime("[embed detected][$self.type]${self.moduleVersion.id}")
+            FatUtils.logAnytime("[embed detected][$self.type]${self.moduleVersion.id}###[${FatUtils.formatDataSize(self.file.size())}]")
             moduleNames.remove(self.moduleVersion.id.name)
 
             dependency.allModuleArtifacts.each { artifact ->
@@ -102,7 +102,7 @@ class VariantProcessor {
                     return
                 }
                 if (artifact != self) {
-                    FatUtils.logAnytime("    - [embed detected][transitive][$artifact.type]${artifact.moduleVersion.id}")
+                    FatUtils.logAnytime("    - [embed detected][transitive][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
                     moduleNames.remove(artifact.moduleVersion.id.name)
                 }
             }
@@ -111,7 +111,7 @@ class VariantProcessor {
         moduleNames.each { name ->
             ResolvedArtifact artifact = artifacts.find { it.moduleVersion.id.name == name }
             if (artifact != null) {
-                FatUtils.logAnytime("[embed detected][$artifact.type]${artifact.moduleVersion.id}")
+                FatUtils.logAnytime("[embed detected][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
             }
         }
     }

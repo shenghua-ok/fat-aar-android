@@ -48,6 +48,7 @@ class FatAarPlugin implements Plugin<Project> {
     }
 
     private void doAfterEvaluate() {
+        FatUtils.logAnytime("[doAfterEvaluate]")
         embedConfigurations.each {
             if (project.fataar.transitive) {
                 it.transitive = true
@@ -71,17 +72,21 @@ class FatAarPlugin implements Plugin<Project> {
 
             if (!artifacts.isEmpty()) {
                 def processor = new VariantProcessor(project, variant)
+                //firstLevelDependencies.size >= artifacts.size
                 processor.processVariant(artifacts, firstLevelDependencies, transform)
             }
         }
     }
 
     private void createConfigurations() {
+        //so this value should be 'embed'
         Configuration embedConf = project.configurations.create(CONFIG_NAME)
         createConfiguration(embedConf)
         FatUtils.logInfo("Creating configuration embed")
 
         project.android.buildTypes.all { buildType ->
+            //buildType is either debug or release.
+            //so this value should be 'debugEmbed' or 'releaseEmbed'
             String configName = buildType.name + CONFIG_SUFFIX
             Configuration configuration = project.configurations.create(configName)
             createConfiguration(configuration)
@@ -89,12 +94,14 @@ class FatAarPlugin implements Plugin<Project> {
         }
 
         project.android.productFlavors.all { flavor ->
+            //so this value should be 'flavorEmbed'
             String configName = flavor.name + CONFIG_SUFFIX
             Configuration configuration = project.configurations.create(configName)
             createConfiguration(configuration)
             FatUtils.logInfo("Creating configuration " + configName)
             project.android.buildTypes.all { buildType ->
                 String variantName = flavor.name + buildType.name.capitalize()
+                //so this value should be 'flavorDebugEmbed' or 'flavorReleaseEmbed'
                 String variantConfigName = variantName + CONFIG_SUFFIX
                 Configuration variantConfiguration = project.configurations.create(variantConfigName)
                 createConfiguration(variantConfiguration)
@@ -126,6 +133,7 @@ class FatAarPlugin implements Plugin<Project> {
                 } else {
                     throw new ProjectConfigurationException('Only support embed aar and jar dependencies!', null)
                 }
+                FatUtils.logInLoop("[resolvedFile][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
                 set.add(artifact)
             }
         }
@@ -142,6 +150,7 @@ class FatAarPlugin implements Plugin<Project> {
             if (!match) {
                 def flavorArtifact = FlavorArtifact.createFlavorArtifact(project, variant, dependency)
                 if (flavorArtifact != null) {
+                    FatUtils.logInLoop("[unresolvedFile][$flavorArtifact.type]${flavorArtifact.moduleVersion.id}###[${FatUtils.formatDataSize(flavorArtifact.file.size())}]")
                     artifactList.add(flavorArtifact)
                 }
             }

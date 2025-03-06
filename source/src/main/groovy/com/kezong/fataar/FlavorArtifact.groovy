@@ -45,7 +45,7 @@ class FlavorArtifact {
         if (bundleProvider == null) {
             return null
         }
-
+        //'moduleGroup:moduleName:moduleVersion'
         ModuleVersionIdentifier identifier = createModuleVersionIdentifier(unResolvedArtifact)
         File artifactFile = createArtifactFile(artifactProject, bundleProvider.get())
         DefaultIvyArtifactName artifactName = createArtifactName(artifactFile)
