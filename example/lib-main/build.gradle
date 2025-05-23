@@ -1,7 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.kezong.fat-aar'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 repositories {
     flatDir {
@@ -10,13 +9,14 @@ repositories {
 }
 
 android {
-    compileSdkVersion 29
+    namespace "com.kezong.demo.lib"
+    compileSdk rootProject.ext.compileSdk
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 27
-        versionCode 1
-        versionName "1.0.0"
+        minSdk rootProject.ext.minSdk
+        targetSdk rootProject.ext.targetSdk
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
     }
 
     buildTypes {
