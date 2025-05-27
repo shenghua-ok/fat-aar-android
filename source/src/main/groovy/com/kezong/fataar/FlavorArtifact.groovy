@@ -1,6 +1,6 @@
 package com.kezong.fataar
 
-import com.android.build.gradle.api.LibraryVariant
+import com.android.build.api.variant.LibraryVariant
 import com.android.builder.model.ProductFlavor
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -38,7 +38,7 @@ class FlavorArtifact {
         try {
             bundleProvider = getBundleTask(artifactProject, variant)
         } catch (Exception ignore) {
-            FatUtils.logError("[$variant.name]Can not resolve :$unResolvedArtifact.moduleName")
+            FatUtils.logError("[$variant.name]Can not resolve :$unResolvedArtifact.moduleName:${ignore.printStackTrace()}")
             return null
         }
 
@@ -152,8 +152,10 @@ class FlavorArtifact {
             }
 
             // 2. find buildType
-            ProductFlavor flavor = variant.productFlavors.isEmpty() ? variant.mergedFlavor : variant.productFlavors.first()
-            if (subVariant.name == variant.buildType.name) {
+            def flavorName = variant.productFlavors.first().second
+            def flavor = project.android.productFlavors.find { it.name == flavorName }
+
+            if (subVariant.name == variant.buildType) {
                 try {
                     bundleTaskProvider = VersionAdapter.getBundleTaskProvider(project, subVariant.name as String)
                     return true
@@ -170,7 +172,7 @@ class FlavorArtifact {
                             subVariant.mergedFlavor : subVariant.productFlavors.first()
                     if (toDimension == subFlavor.dimension
                             && toFlavor == subFlavor.name
-                            && variant.buildType.name == subVariant.buildType.name) {
+                            && variant.buildType == subVariant.buildType) {
                         try {
                             bundleTaskProvider = VersionAdapter.getBundleTaskProvider(project, subVariant.name as String)
                             return true

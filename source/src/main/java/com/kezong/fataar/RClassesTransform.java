@@ -8,8 +8,8 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.google.common.collect.ImmutableSet;
+//import com.android.build.gradle.internal.pipeline.TransformManager;
+//import com.google.common.collect.ImmutableSet;
 
 import org.gradle.api.Project;
 
@@ -89,12 +89,14 @@ public class RClassesTransform extends Transform {
 
     @Override
     public Set<QualifiedContent.ContentType> getInputTypes() {
-        return TransformManager.CONTENT_CLASS;
+        return null;
+//        return TransformManager.CONTENT_CLASS;
     }
 
     @Override
     public Set<? super QualifiedContent.Scope> getScopes() {
-        return ImmutableSet.of(QualifiedContent.Scope.PROJECT);
+        return null;
+//        return ImmutableSet.of(QualifiedContent.Scope.PROJECT);
     }
 
     @Override

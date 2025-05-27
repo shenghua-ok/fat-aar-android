@@ -5,6 +5,11 @@ android {
     compileSdk rootProject.ext.compileSdk
     namespace "com.kezong.demo.libaar"
 
+    compileOptions {
+        sourceCompatibility rootProject.ext.javaVersion
+        targetCompatibility rootProject.ext.javaVersion
+    }
+
     defaultConfig {
         minSdk rootProject.ext.minSdk
         targetSdk rootProject.ext.targetSdk

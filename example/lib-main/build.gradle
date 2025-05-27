@@ -12,6 +12,11 @@ android {
     namespace "com.kezong.demo.lib"
     compileSdk rootProject.ext.compileSdk
 
+    compileOptions {
+        sourceCompatibility rootProject.ext.javaVersion
+        targetCompatibility rootProject.ext.javaVersion
+    }
+
     defaultConfig {
         minSdk rootProject.ext.minSdk
         targetSdk rootProject.ext.targetSdk
