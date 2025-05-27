@@ -36,7 +36,7 @@ class FlavorArtifact {
         Project artifactProject = getArtifactProject(project, unResolvedArtifact)
         TaskProvider bundleProvider = null;
         try {
-            bundleProvider = getBundleTask(artifactProject, variant)
+            bundleProvider = getBundleTask(project, variant, artifactProject)
         } catch (Exception ignore) {
             FatUtils.logError("[$variant.name]Can not resolve :$unResolvedArtifact.moduleName:${ignore.printStackTrace()}")
             return null
@@ -139,49 +139,47 @@ class FlavorArtifact {
         return output
     }
 
-    private static TaskProvider getBundleTask(Project project, LibraryVariant variant) {
+    private static TaskProvider getBundleTask(Project mainProject,LibraryVariant variant,Project subProject) {
         TaskProvider bundleTaskProvider = null
-        project.android.libraryVariants.find { subVariant ->
+        subProject.android.libraryVariants.find { subVariant ->
             // 1. find same flavor
             if (variant.name == subVariant.name) {
                 try {
-                    bundleTaskProvider = VersionAdapter.getBundleTaskProvider(project, subVariant.name as String)
+                    bundleTaskProvider = VersionAdapter.getBundleTaskProvider(subProject, subVariant.name as String)
                     return true
                 } catch (Exception ignore) {
+                    ignore.printStackTrace()
                 }
             }
 
             // 2. find buildType
-            def flavorName = variant.productFlavors.first().second
-            def flavor = project.android.productFlavors.find { it.name == flavorName }
-
             if (subVariant.name == variant.buildType) {
                 try {
-                    bundleTaskProvider = VersionAdapter.getBundleTaskProvider(project, subVariant.name as String)
+                    bundleTaskProvider = VersionAdapter.getBundleTaskProvider(subProject, subVariant.name as String)
                     return true
                 } catch (Exception ignore) {
+                    ignore.printStackTrace()
                 }
             }
 
             // 3. find missingStrategies
-            try {
-                flavor.missingDimensionStrategies.find { entry ->
-                    String toDimension = entry.getKey()
-                    String toFlavor = entry.getValue().getFallbacks().first()
+            mainProject.android.productFlavors.each { itFlavor ->
+                itFlavor.missingDimensionStrategies?.each { entry ->
+                    def toDimension = entry.key
+                    def toFlavor = entry.value?.fallbacks?.first() ?: ""
                     ProductFlavor subFlavor = subVariant.productFlavors.isEmpty() ?
                             subVariant.mergedFlavor : subVariant.productFlavors.first()
                     if (toDimension == subFlavor.dimension
                             && toFlavor == subFlavor.name
-                            && variant.buildType == subVariant.buildType) {
+                            && variant.buildType == subVariant.buildType.name) {
                         try {
-                            bundleTaskProvider = VersionAdapter.getBundleTaskProvider(project, subVariant.name as String)
+                            bundleTaskProvider = VersionAdapter.getBundleTaskProvider(subProject, subVariant.name as String)
                             return true
                         } catch (Exception ignore) {
+                            ignore.printStackTrace()
                         }
                     }
                 }
-            } catch (Exception ignore) {
-
             }
 
             return bundleTaskProvider != null

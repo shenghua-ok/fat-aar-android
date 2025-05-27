@@ -47,7 +47,6 @@ android {
         exclude 'lib/x86/*.so'
         exclude 'lib/x86_64/*.so'
         exclude 'lib/armeabi/*.so'
-        exclude 'lib/arm64-v8a/*.so'
     }
 }
 

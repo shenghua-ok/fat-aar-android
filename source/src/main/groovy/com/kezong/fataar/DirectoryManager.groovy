@@ -1,6 +1,6 @@
 package com.kezong.fataar;
 
-import com.android.build.gradle.api.LibraryVariant;
+import com.android.build.api.variant.LibraryVariant
 
 import org.gradle.api.Project;
 

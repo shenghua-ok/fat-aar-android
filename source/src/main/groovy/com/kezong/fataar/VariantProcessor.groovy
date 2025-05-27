@@ -1,9 +1,7 @@
 package com.kezong.fataar
 
-import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.api.instrumentation.FramesComputationMode
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ResolvedArtifact
@@ -49,16 +47,12 @@ class VariantProcessor {
         mAndroidArchiveLibraries.add(library)
     }
 
-    Collection<AndroidArchiveLibrary> getAndroidArchiveLibrary() {
-        return mAndroidArchiveLibraries
-    }
-
     void addJarFile(File jar) {
         mJarFiles.add(jar)
     }
 
     void processVariant(Collection<ResolvedArtifact> artifacts,
-                        Collection<ResolvableDependency> dependencies) {
+                        Collection<ResolvableDependency> dependencies, IForRClasses callback) {
         String taskPath = 'pre' + mVariant.name.capitalize() + 'Build'
         TaskProvider prepareTask = mProject.tasks.named(taskPath)
         if (prepareTask == null) {
@@ -68,7 +62,6 @@ class VariantProcessor {
         preEmbed(artifacts, dependencies, prepareTask)
         processArtifacts(artifacts, prepareTask, bundleTask)
         processClassesAndJars(bundleTask)
-        FatUtils.logAnytime("mAndroidArchiveLibraries 000000000000000000000000000000000000000000000000000000.")
         if (mAndroidArchiveLibraries.isEmpty()) {
             return
         }
@@ -79,8 +72,7 @@ class VariantProcessor {
         processConsumerProguard()
         processGenerateProguard()
         processDataBinding(bundleTask)
-        //todo: processRClasses(transform, bundleTask)
-//        processRClassesV2()
+        processRClasses(callback, bundleTask)
     }
 
     private static void printEmbedArtifacts(Collection<ResolvedArtifact> artifacts,
@@ -182,22 +174,21 @@ class VariantProcessor {
         return task
     }
 
-    @Deprecated
-    private void processRClasses(RClassesTransform transform, TaskProvider<Task> bundleTask) {
+    private void processRClasses(IForRClasses callback, TaskProvider<Task> bundleTask) {
         TaskProvider reBundleTask = configureReBundleAarTask(bundleTask)
-        TaskProvider transformTask = mProject.tasks.named("transformClassesWith${transform.name.capitalize()}For${mVariant.name.capitalize()}")
+        TaskProvider transformTask = mProject.tasks.named("transform${mVariant.name.capitalize()}ClassesWithAsm")
         transformTask.configure {
             it.dependsOn(mMergeClassTask)
         }
         if (mProject.fataar.transformR) {
-            transformRClasses(transform, transformTask, bundleTask, reBundleTask)
+            transformRClasses(callback, transformTask, bundleTask, reBundleTask)
         } else {
             generateRClasses(bundleTask, reBundleTask)
         }
     }
 
-    private void transformRClasses(RClassesTransform transform, TaskProvider transformTask, TaskProvider bundleTask, TaskProvider reBundleTask) {
-        transform.putTargetPackage(mVariant.name, mVariant.getApplicationId())
+    private void transformRClasses(IForRClasses callback, TaskProvider transformTask, TaskProvider bundleTask, TaskProvider reBundleTask) {
+//        transform.putTargetPackage(mVariant.name, mVariant.getApplicationId())
         transformTask.configure {
             doFirst {
                 // library package name parsed by aar's AndroidManifest.xml
@@ -206,12 +197,35 @@ class VariantProcessor {
                         .stream()
                         .map { it.packageName }
                         .collect()
-                transform.putLibraryPackages(mVariant.name, libraryPackages);
+                def map = buildTransformTable(mVariant.namespace.get(), libraryPackages)
+                callback.setPackage(mVariant.name, map)
+//                transform.putLibraryPackages(mVariant.name, libraryPackages);
             }
         }
         bundleTask.configure {
             finalizedBy(reBundleTask)
         }
+    }
+
+    private static Map<String, String> buildTransformTable(String targetPackage, Collection<String> libraryPackages) {
+        if (targetPackage == null || libraryPackages == null) {
+            return null;
+        }
+
+        final List<String> resourceTypes = Arrays.asList("anim", "animator", "array", "attr", "bool", "color", "dimen",
+                "drawable", "font", "fraction", "id", "integer", "interpolator", "layout", "menu", "mipmap", "navigation",
+                "plurals", "raw", "string", "style", "styleable", "transition", "xml");
+
+        HashMap<String, String> map = new HashMap<>();
+        for (String resource : resourceTypes) {
+            String targetClass = targetPackage.replace(".", "/") + "/R\$${resource}";
+            for (String libraryPackage : libraryPackages) {
+                String fromClass = libraryPackage.replace(".", "/") + "/R\$${resource}";
+                map.put(fromClass, targetClass);
+            }
+        }
+
+        return map;
     }
 
     private void generateRClasses(TaskProvider<Task> bundleTask, TaskProvider<Task> reBundleTask) {
@@ -323,6 +337,8 @@ class VariantProcessor {
      * merge manifest
      */
     private void processManifest() {
+        TaskProvider<LibraryManifestMerger> manifestsMergeTask = mProject.tasks.register("merge${mVariant.name.capitalize()}Manifest", LibraryManifestMerger) {
+        }
         def manifestTaskProvider = mProject.tasks.named("process${mVariant.name.capitalize()}Manifest")
         manifestTaskProvider.configure { processManifestTask ->
             File manifestOutput
@@ -344,52 +360,18 @@ class VariantProcessor {
                 inputManifests.add(archiveLibrary.getManifest())
             }
 
-            TaskProvider<LibraryManifestMerger> manifestsMergeTask = mProject.tasks.register("merge${mVariant.name.capitalize()}Manifest", LibraryManifestMerger) {
-                setGradleVersion(mProject.getGradle().getGradleVersion())
-                setGradlePluginVersion(VersionAdapter.AGPVersion)
-                setMainManifestFile(manifestOutput)
-                setSecondaryManifestFiles(inputManifests)
-                setOutputFile(manifestOutput)
-            }
-
             processManifestTask.dependsOn(mExplodeTasks)
             processManifestTask.inputs.files(inputManifests)
             processManifestTask.doLast {
                 // Merge manifests
+                manifestsMergeTask.get().setGradleVersion(mProject.getGradle().getGradleVersion())
+                manifestsMergeTask.get().setGradlePluginVersion(VersionAdapter.AGPVersion)
+                manifestsMergeTask.get().setMainManifestFile(manifestOutput)
+                manifestsMergeTask.get().setSecondaryManifestFiles(inputManifests)
+                manifestsMergeTask.get().setOutputFile(manifestOutput)
                 manifestsMergeTask.get().doTaskAction()
             }
         }
-
-//        ManifestProcessorTask processManifestTask =  mVariant.getOutputs().first().getProcessManifestProvider().get()
-//
-//        File manifestOutput
-//        if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "4.2.0-alpha07") >= 0) {
-//            manifestOutput = mProject.file("${mProject.buildDir.path}/intermediates/merged_manifest/${mVariant.name}/AndroidManifest.xml")
-//        } else if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "3.3.0") >= 0) {
-//            manifestOutput = mProject.file("${mProject.buildDir.path}/intermediates/library_manifest/${mVariant.name}/AndroidManifest.xml")
-//        } else {
-//            manifestOutput = mProject.file(processManifestTask.getManifestOutputDirectory().absolutePath + "/AndroidManifest.xml")
-//        }
-//
-//        final List<File> inputManifests = new ArrayList<>()
-//        for (archiveLibrary in mAndroidArchiveLibraries) {
-//            inputManifests.add(archiveLibrary.getManifest())
-//        }
-//
-//        TaskProvider<LibraryManifestMerger> manifestsMergeTask = mProject.tasks.register("merge${mVariant.name.capitalize()}Manifest", LibraryManifestMerger) {
-//            setGradleVersion(mProject.getGradle().getGradleVersion())
-//            setGradlePluginVersion(VersionAdapter.AGPVersion)
-//            setMainManifestFile(manifestOutput)
-//            setSecondaryManifestFiles(inputManifests)
-//            setOutputFile(manifestOutput)
-//        }
-//
-//        processManifestTask.dependsOn(mExplodeTasks)
-//        processManifestTask.inputs.files(inputManifests)
-//        processManifestTask.doLast {
-//            // Merge manifests
-//            manifestsMergeTask.get().doTaskAction()
-//        }
     }
 
     private TaskProvider handleClassesMergeTask(final boolean isMinifyEnabled) {
@@ -511,16 +493,14 @@ class VariantProcessor {
         if (resourceGenTask == null) {
             throw new RuntimeException("Can not find task ${taskPath}!")
         }
-
         resourceGenTask.configure {
             dependsOn(mExplodeTasks)
-
-            mProject.android.sourceSets.each { DefaultAndroidSourceSet sourceSet ->
-                if (sourceSet.name == mVariant.name) {
-                    for (archiveLibrary in mAndroidArchiveLibraries) {
-                        FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
-                        sourceSet.res.srcDir(archiveLibrary.resFolder)
-                    }
+        }
+        mProject.android.sourceSets.each { DefaultAndroidSourceSet sourceSet ->
+            if (sourceSet.name == mVariant.name) {
+                for (archiveLibrary in mAndroidArchiveLibraries) {
+                    FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
+                    sourceSet.res.srcDir(archiveLibrary.resFolder)
                 }
             }
         }
@@ -532,15 +512,14 @@ class VariantProcessor {
      * AaptOptions.setIgnoreAssets and AaptOptions.setIgnoreAssetsPattern will work as normal
      */
     private void processAssets() {
-        def mergeAssetsTaskName = "merge${mVariant.name.capitalize()}Assets"
-        TaskProvider<Task> mergeAssetsTask = mProject.tasks.named(mergeAssetsTaskName)
+        String mergeAssetsTaskName = "package${mVariant.name.capitalize()}Assets"
+        TaskProvider mergeAssetsTask = mProject.tasks.named(mergeAssetsTaskName)
         if (mergeAssetsTask == null) {
             throw new RuntimeException("Can not find task in variant.getMergeAssets()!")
         }
-        mergeAssetsTask.configure { assetsTask ->
-
-            assetsTask.dependsOn(mExplodeTasks)
-            assetsTask.doFirst {
+        mergeAssetsTask.configure {
+            dependsOn(mExplodeTasks)
+            doFirst {
                 mProject.android.sourceSets.each {
                     if (it.name == mVariant.name) {
                         for (archiveLibrary in mAndroidArchiveLibraries) {
@@ -553,25 +532,6 @@ class VariantProcessor {
                 }
             }
         }
-
-//        Task assetsTask = mVersionAdapter.getMergeAssets()
-//        if (assetsTask == null) {
-//            throw new RuntimeException("Can not find task in variant.getMergeAssets()!")
-//        }
-//
-//        assetsTask.dependsOn(mExplodeTasks)
-//        assetsTask.doFirst {
-//            mProject.android.sourceSets.each {
-//                if (it.name == mVariant.name) {
-//                    for (archiveLibrary in mAndroidArchiveLibraries) {
-//                        if (archiveLibrary.assetsFolder != null && archiveLibrary.assetsFolder.exists()) {
-//                            FatUtils.logInfo("Merge assets，Library assets folder：${archiveLibrary.assetsFolder}")
-//                            it.assets.srcDir(archiveLibrary.assetsFolder)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
     /**
@@ -583,15 +543,14 @@ class VariantProcessor {
         if (mergeJniLibsTask == null) {
             throw new RuntimeException("Can not find task ${taskPath}!")
         }
-
         mergeJniLibsTask.configure {
             dependsOn(mExplodeTasks)
-
             doFirst {
-                for (archiveLibrary in mAndroidArchiveLibraries) {
-                    if (archiveLibrary.jniFolder != null && archiveLibrary.jniFolder.exists()) {
-                        mProject.android.sourceSets.each {
-                            if (it.name == mVariant.name) {
+                mProject.android.sourceSets.each {
+                    if (it.name == mVariant.name) {
+                        for (archiveLibrary in mAndroidArchiveLibraries) {
+                            if (archiveLibrary.jniFolder != null && archiveLibrary.jniFolder.exists()) {
+                                FatUtils.logInfo("Merge resource，Library jniLibs：${archiveLibrary.jniFolder}")
                                 it.jniLibs.srcDir(archiveLibrary.jniFolder)
                             }
                         }
@@ -599,6 +558,7 @@ class VariantProcessor {
                 }
             }
         }
+
     }
 
     /**

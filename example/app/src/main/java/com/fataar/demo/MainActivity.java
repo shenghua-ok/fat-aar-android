@@ -75,7 +75,7 @@ public class MainActivity extends FragmentActivity {
         try {
             Fresco.initialize(this);
             ImageRequest imageRequest = ImageRequestBuilder
-                    .newBuilderWithSource(Uri.parse("https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=3096503764,1460949822&fm=26&gp=0.jpg"))
+                    .newBuilderWithSource(Uri.parse("https://fastly.picsum.photos/id/685/536/354.jpg?hmac=Hd6dp2Be-rOnk4Iqn2P0JT4dbWx6ZwdihOS9q9KbXvs"))
                     .setProgressiveRenderingEnabled(true)
                     .build();
             ImagePipeline imagePipeline = Fresco.getImagePipeline();

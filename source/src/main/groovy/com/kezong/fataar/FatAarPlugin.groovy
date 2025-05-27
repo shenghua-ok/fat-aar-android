@@ -11,6 +11,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.ResolvedDependency
 import com.android.build.api.variant.AndroidComponentsExtension
+import org.gradle.api.provider.MapProperty
 
 /**
  * plugin entry
@@ -26,132 +27,91 @@ class FatAarPlugin implements Plugin<Project> {
     public static final String CONFIG_SUFFIX = 'Embed'
 
     private Project project
-
-
-    private final Map<String, Collection<String>> libraryPackageMap = new HashMap<>();
-
     private final Collection<Configuration> embedConfigurations = new ArrayList<>()
+
     private def variantDataMap = [:]  // key: variantName, value: map with artifacts, dependencies
+    private final Map<String, Map<String, String>> libraryPackageMap = new HashMap<>()
+
     @Override
     void apply(Project project) {
+        libraryPackageMap.clear()
         this.project = project
         checkAndroidPlugin()
         FatUtils.attach(project)
         DirectoryManager.attach(project)
         project.extensions.create(FatAarExtension.NAME, FatAarExtension)
         createConfigurations()
-        findDependency()
+        MapProperty<String, String> mapProp = project.objects.mapProperty(String, String)
+        initRClassesHandler(mapProp)
         project.afterEvaluate {
-            doAfterEvaluate()
+            initTransitive()
+            findDependency(mapProp)
         }
     }
 
-    private void doAfterEvaluate() {
-        variantDataMap.each { variantName, data ->
-            def variant = data.variant
-            def artifacts = data.artifacts
-            def firstLevelDependencies = data.firstLevelDependencies
-            def processor = new VariantProcessor(project, variant)
-            //firstLevelDependencies.size >= artifacts.size
-            processor.processVariant(artifacts, firstLevelDependencies)
-            libraryPackageMap.put(variantName, processor.getAndroidArchiveLibrary())
-        }
-    }
-
-    private void findDependency() {
-        embedConfigurations.each {
-            if (project.fataar.transitive) {
-                it.transitive = true
-            }
-        }
+    private void initRClassesHandler(MapProperty<String, String> mapProperty) {
         project.plugins.withId("com.android.library") {
             def androidComponents = project.extensions.findByType(AndroidComponentsExtension)
             if (androidComponents != null) {
                 androidComponents.onVariants(androidComponents.selector().all(), new Action<LibraryVariant>() {
                     @Override
                     void execute(LibraryVariant variant) {
-                        def variantNameUpCase = "${variant.name.capitalize()}"
-                        registerRClassesHandler(variant)
-                        def taskName = "resolveArtifactsFor$variantNameUpCase"
-                        def taskProvider = project.tasks.register(taskName) { task ->
-                            task.doLast {
-                                Collection<ResolvedArtifact> artifacts = new ArrayList()
-                                Collection<ResolvedDependency> firstLevelDependencies = new ArrayList<>()
-                                embedConfigurations.each { configuration ->
-                                    if (configuration.name == CONFIG_NAME
-                                            || configuration.name == variant.buildType + CONFIG_SUFFIX
-                                            || configuration.name == variant.flavorName + CONFIG_SUFFIX
-                                            || configuration.name == variant.name + CONFIG_SUFFIX) {
-                                        Collection<ResolvedArtifact> resolvedArtifacts = resolveArtifacts(configuration)
-                                        artifacts.addAll(resolvedArtifacts)
-                                        artifacts.addAll(dealUnResolveArtifacts(configuration, variant as LibraryVariant, resolvedArtifacts))
-                                        firstLevelDependencies.addAll(configuration.resolvedConfiguration.firstLevelModuleDependencies)
-                                    }
-                                }
-
-                                if (!artifacts.isEmpty()) {
-                                    variantDataMap[variantNameUpCase] = [
-                                            variant               : variant,
-                                            artifacts             : artifacts,
-                                            firstLevelDependencies: firstLevelDependencies
-                                    ]
-                                }
-
-                            }
-                        }
-                        project.tasks.matching { it.name == "assemble${variant.name.capitalize()}" }.configureEach {
-                            it.dependsOn(taskProvider)
-                        }
+                        variantDataMap[variant.name] = [
+                                variant: variant
+                        ]
+                        registerRClassesHandler(variant, mapProperty)
                     }
                 })
             } else {
                 println("AndroidComponentsExtension not found.")
             }
         }
-
     }
 
-
-    private registerRClassesHandler(LibraryVariant mVariant) {
-        def renameMapProvider = project.provider {
-            def variantNameUpCase = "${mVariant.name.capitalize()}"
-            buildTransformTable(mVariant.namespace.get(), libraryPackageMap[variantNameUpCase])
-        }
-
+    private static registerRClassesHandler(LibraryVariant mVariant, MapProperty<String, String> mapProperty) {
         mVariant.instrumentation.transformClassesWith(RClassesVisitorFactory.class, InstrumentationScope.PROJECT) { params ->
-            params.transformTable.set(renameMapProvider)
+            params.transformTable.set(mapProperty)
         }
         mVariant.instrumentation.setAsmFramesComputationMode(
                 FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
         )
     }
 
-    private static Map<String, String> buildTransformTable(String targetPackage, Collection<AndroidArchiveLibrary> androidArchiveLibraries) {
-        Collection<String> libraryPackages = androidArchiveLibraries
-                .stream()
-                .map { targetPackage }
-                .collect()
-        if (targetPackage == null || libraryPackages == null) {
-            return null
-        }
-
-        List<String> resourceTypes = [
-                "anim", "animator", "array", "attr", "bool", "color", "dimen",
-                "drawable", "font", "fraction", "id", "integer", "interpolator",
-                "layout", "menu", "mipmap", "navigation", "plurals", "raw",
-                "string", "style", "styleable", "transition", "xml"
-        ]
-
-        Map<String, String> map = [:]
-        resourceTypes.each { resource ->
-            String targetClass = targetPackage.replace('.', '/') + "/R\$${resource}"
-            libraryPackages.each { libraryPackage ->
-                String fromClass = libraryPackage.replace('.', '/') + "/R\$${resource}"
-                map.put(fromClass, targetClass)
+    private void initTransitive() {
+        embedConfigurations.each {
+            if (project.fataar.transitive) {
+                it.transitive = true
             }
         }
+    }
 
-        return map
+    private void findDependency(MapProperty<String, String> mapProperty) {
+        variantDataMap.each { _, data ->
+            def variant = data.variant
+
+            Collection<ResolvedArtifact> artifacts = new ArrayList()
+            Collection<ResolvedDependency> firstLevelDependencies = new ArrayList<>()
+            embedConfigurations.each { configuration ->
+                if (configuration.name == CONFIG_NAME
+                        || configuration.name == variant.buildType + CONFIG_SUFFIX
+                        || configuration.name == variant.flavorName + CONFIG_SUFFIX
+                        || configuration.name == variant.name + CONFIG_SUFFIX) {
+                    Collection<ResolvedArtifact> resolvedArtifacts = resolveArtifacts(configuration)
+                    artifacts.addAll(resolvedArtifacts)
+                    artifacts.addAll(dealUnResolveArtifacts(configuration, variant as LibraryVariant, resolvedArtifacts))
+                    firstLevelDependencies.addAll(configuration.resolvedConfiguration.firstLevelModuleDependencies)
+                }
+            }
+            def processor = new VariantProcessor(project, variant)
+            //firstLevelDependencies.size >= artifacts.size
+            processor.processVariant(artifacts, firstLevelDependencies, new IForRClasses() {
+                @Override
+                void setPackage(String variantNameArg, Map<String, String> libPkgNameMap) {
+                    mapProperty.set(libPkgNameMap)
+                    //libraryPackageMap.put(variantNameArg, libPkgNameMap)
+                }
+            })
+        }
     }
 
     private void createConfigurations() {
@@ -209,7 +169,7 @@ class FatAarPlugin implements Plugin<Project> {
                 } else {
                     throw new ProjectConfigurationException('Only support embed aar and jar dependencies!', null)
                 }
-                FatUtils.logInLoop("[resolvedFile][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
+//                FatUtils.logInLoop("[resolvedFile][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
                 set.add(artifact)
             }
         }
@@ -219,14 +179,16 @@ class FatAarPlugin implements Plugin<Project> {
     private Collection<ResolvedArtifact> dealUnResolveArtifacts(Configuration configuration, LibraryVariant variant, Collection<ResolvedArtifact> artifacts) {
         def artifactList = new ArrayList()
         configuration.resolvedConfiguration.firstLevelModuleDependencies.each { dependency ->
+//            [lib-java][lib-aar][lib-aar2][guava][fresco][glide]
             def match = artifacts.any { artifact ->
+//            [lib-java][guava][fresco][glide]
                 dependency.moduleName == artifact.moduleVersion.id.name
             }
 
             if (!match) {
                 def flavorArtifact = FlavorArtifact.createFlavorArtifact(project, variant, dependency)
                 if (flavorArtifact != null) {
-                    FatUtils.logInLoop("[unresolvedFile][$flavorArtifact.type]${flavorArtifact.moduleVersion.id}###[${FatUtils.formatDataSize(flavorArtifact.file.size())}]")
+//                    FatUtils.logInLoop("[unresolvedFile][$flavorArtifact.type]${flavorArtifact.moduleVersion.id}###[${FatUtils.formatDataSize(flavorArtifact.file.size())}]")
                     artifactList.add(flavorArtifact)
                 }
             }

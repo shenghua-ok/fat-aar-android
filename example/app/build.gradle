@@ -50,4 +50,6 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation('androidx.appcompat:appcompat:1.2.0')
     implementation(name: 'fat-aar-final', ext: 'aar')
+    //https://stackoverflow.com/questions/63711300/flutter-building-apk-duplicate-class-found-in-modules-guava-26-0-android-jar-an
+    implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
 }

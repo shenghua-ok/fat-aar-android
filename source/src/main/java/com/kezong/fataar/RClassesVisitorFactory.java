@@ -13,8 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
-import java.util.Map;
-
 public abstract class RClassesVisitorFactory
         implements AsmClassVisitorFactory<RClassesVisitorFactory.RClassesParameters> {
 
@@ -25,13 +23,11 @@ public abstract class RClassesVisitorFactory
 
     @Override
     public boolean isInstrumentable(ClassData classData) {
-        return classData.getClassName().endsWith(".class");
+        return true;
     }
 
     @Override
     public @NotNull ClassVisitor createClassVisitor(@NotNull ClassContext classContext, @NotNull ClassVisitor nextClassVisitor) {
-        println("mAndroidArchiveLibraries 555555555555555555555555555555555555555555555555555555");
-        Map<String, String> table = getParameters().get().getTransformTable().get();
-        return new RClassesVisitor(Opcodes.ASM9, nextClassVisitor, table);
+        return new RClassesVisitor(Opcodes.ASM9, nextClassVisitor, getParameters().get());
     }
 }
