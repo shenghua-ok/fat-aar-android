@@ -1,11 +1,12 @@
 package com.kezong.fataar
 
 import com.android.build.api.variant.LibraryVariant
-import com.android.build.gradle.tasks.ManifestProcessorTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 
 import java.lang.reflect.Field
@@ -153,5 +154,9 @@ class VersionAdapter {
             Field version = aClass.getDeclaredField("ANDROID_GRADLE_PLUGIN_VERSION")
             return version.get(aClass)
         }
+    }
+
+    static Provider<RegularFile> getRMappingJsonProvider(Project project) {
+        return project.layout.buildDirectory.file("tmp/r_classes_mapping.json")
     }
 }

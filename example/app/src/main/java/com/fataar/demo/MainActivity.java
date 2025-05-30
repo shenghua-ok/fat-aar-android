@@ -88,7 +88,7 @@ public class MainActivity extends FragmentActivity {
                     mRoot.post(() -> {
                         ImageView imageView = new ImageView(MainActivity.this);
                         imageView.setImageBitmap(bitmap);
-                        LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(100, 100);
+                        LinearLayout.LayoutParams ll = new LinearLayout.LayoutParams(300, 300);
                         mRoot.addView(imageView, ll);
                         addTestView("remote aar merge", "yes", true);
                     });

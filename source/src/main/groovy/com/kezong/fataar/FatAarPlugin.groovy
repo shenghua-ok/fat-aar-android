@@ -2,6 +2,7 @@ package com.kezong.fataar
 
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationScope
+import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.LibraryVariant
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -10,8 +11,6 @@ import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.ResolvedDependency
-import com.android.build.api.variant.AndroidComponentsExtension
-import org.gradle.api.provider.MapProperty
 
 /**
  * plugin entry
@@ -30,26 +29,23 @@ class FatAarPlugin implements Plugin<Project> {
     private final Collection<Configuration> embedConfigurations = new ArrayList<>()
 
     private def variantDataMap = [:]  // key: variantName, value: map with artifacts, dependencies
-    private final Map<String, Map<String, String>> libraryPackageMap = new HashMap<>()
 
     @Override
     void apply(Project project) {
-        libraryPackageMap.clear()
         this.project = project
         checkAndroidPlugin()
         FatUtils.attach(project)
         DirectoryManager.attach(project)
         project.extensions.create(FatAarExtension.NAME, FatAarExtension)
         createConfigurations()
-        MapProperty<String, String> mapProp = project.objects.mapProperty(String, String)
-        initRClassesHandler(mapProp)
+        initRClassesHandler()
         project.afterEvaluate {
             initTransitive()
-            findDependency(mapProp)
+            makeProcess()
         }
     }
 
-    private void initRClassesHandler(MapProperty<String, String> mapProperty) {
+    private void initRClassesHandler() {
         project.plugins.withId("com.android.library") {
             def androidComponents = project.extensions.findByType(AndroidComponentsExtension)
             if (androidComponents != null) {
@@ -59,7 +55,7 @@ class FatAarPlugin implements Plugin<Project> {
                         variantDataMap[variant.name] = [
                                 variant: variant
                         ]
-                        registerRClassesHandler(variant, mapProperty)
+                        registerRClassesHandler(variant)
                     }
                 })
             } else {
@@ -68,9 +64,10 @@ class FatAarPlugin implements Plugin<Project> {
         }
     }
 
-    private static registerRClassesHandler(LibraryVariant mVariant, MapProperty<String, String> mapProperty) {
+    private registerRClassesHandler(LibraryVariant mVariant) {
+        def mappingFileProvider = VersionAdapter.getRMappingJsonProvider(project)
         mVariant.instrumentation.transformClassesWith(RClassesVisitorFactory.class, InstrumentationScope.PROJECT) { params ->
-            params.transformTable.set(mapProperty)
+            params.transformTableFile.set(mappingFileProvider)
         }
         mVariant.instrumentation.setAsmFramesComputationMode(
                 FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_CLASSES
@@ -85,7 +82,7 @@ class FatAarPlugin implements Plugin<Project> {
         }
     }
 
-    private void findDependency(MapProperty<String, String> mapProperty) {
+    private void makeProcess() {
         variantDataMap.each { _, data ->
             def variant = data.variant
 
@@ -104,13 +101,7 @@ class FatAarPlugin implements Plugin<Project> {
             }
             def processor = new VariantProcessor(project, variant)
             //firstLevelDependencies.size >= artifacts.size
-            processor.processVariant(artifacts, firstLevelDependencies, new IForRClasses() {
-                @Override
-                void setPackage(String variantNameArg, Map<String, String> libPkgNameMap) {
-                    mapProperty.set(libPkgNameMap)
-                    //libraryPackageMap.put(variantNameArg, libPkgNameMap)
-                }
-            })
+            processor.processVariant(artifacts, firstLevelDependencies)
         }
     }
 
@@ -160,7 +151,7 @@ class FatAarPlugin implements Plugin<Project> {
         embedConfigurations.add(embedConf)
     }
 
-    private Collection<ResolvedArtifact> resolveArtifacts(Configuration configuration) {
+    private static Collection<ResolvedArtifact> resolveArtifacts(Configuration configuration) {
         def set = new ArrayList()
         if (configuration != null) {
             configuration.resolvedConfiguration.resolvedArtifacts.each { artifact ->

@@ -2,6 +2,7 @@ package com.kezong.fataar
 
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import groovy.json.JsonOutput
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ResolvedArtifact
@@ -13,6 +14,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskDependency
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -52,7 +54,7 @@ class VariantProcessor {
     }
 
     void processVariant(Collection<ResolvedArtifact> artifacts,
-                        Collection<ResolvableDependency> dependencies, IForRClasses callback) {
+                        Collection<ResolvableDependency> dependencies) {
         String taskPath = 'pre' + mVariant.name.capitalize() + 'Build'
         TaskProvider prepareTask = mProject.tasks.named(taskPath)
         if (prepareTask == null) {
@@ -72,7 +74,7 @@ class VariantProcessor {
         processConsumerProguard()
         processGenerateProguard()
         processDataBinding(bundleTask)
-        processRClasses(callback, bundleTask)
+        processRClasses(bundleTask)
     }
 
     private static void printEmbedArtifacts(Collection<ResolvedArtifact> artifacts,
@@ -174,33 +176,41 @@ class VariantProcessor {
         return task
     }
 
-    private void processRClasses(IForRClasses callback, TaskProvider<Task> bundleTask) {
+    private void processRClasses(TaskProvider<Task> bundleTask) {
         TaskProvider reBundleTask = configureReBundleAarTask(bundleTask)
         TaskProvider transformTask = mProject.tasks.named("transform${mVariant.name.capitalize()}ClassesWithAsm")
         transformTask.configure {
             it.dependsOn(mMergeClassTask)
         }
         if (mProject.fataar.transformR) {
-            transformRClasses(callback, transformTask, bundleTask, reBundleTask)
+            transformRClasses(transformTask, bundleTask, reBundleTask)
         } else {
             generateRClasses(bundleTask, reBundleTask)
         }
     }
 
-    private void transformRClasses(IForRClasses callback, TaskProvider transformTask, TaskProvider bundleTask, TaskProvider reBundleTask) {
-//        transform.putTargetPackage(mVariant.name, mVariant.getApplicationId())
-        transformTask.configure {
-            doFirst {
-                // library package name parsed by aar's AndroidManifest.xml
-                // so must put after explode tasks perform.
+    private void transformRClasses(TaskProvider transformTask, TaskProvider bundleTask, TaskProvider reBundleTask) {
+        TaskProvider mapJsonTask = mProject.tasks.register("gerenerate${mVariant.name.capitalize()}RMapJson") {
+            def mappingFile = VersionAdapter.getRMappingJsonProvider(mProject).get().asFile
+            outputs.file(mappingFile)
+            doLast {
                 Collection libraryPackages = mAndroidArchiveLibraries
                         .stream()
                         .map { it.packageName }
                         .collect()
                 def map = buildTransformTable(mVariant.namespace.get(), libraryPackages)
-                callback.setPackage(mVariant.name, map)
-//                transform.putLibraryPackages(mVariant.name, libraryPackages);
+                try {
+                    mappingFile.parentFile.mkdirs()
+                    mappingFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(map))
+                    FatUtils.logAnytime("Mapping file created at: ${mappingFile.absolutePath}")
+                } catch (Exception e) {
+                    FatUtils.logAnytime("Write file failed: ${e.message}")
+                    throw e
+                }
             }
+        }
+        transformTask.configure {
+            dependsOn(mapJsonTask)
         }
         bundleTask.configure {
             finalizedBy(reBundleTask)
