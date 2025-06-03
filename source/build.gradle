@@ -1,5 +1,5 @@
 apply plugin: 'groovy'
-//apply from: "./upload.gradle"
+apply from: "./jitpack.gradle"
 
 buildscript {
     repositories {
@@ -11,6 +11,11 @@ repositories {
     mavenCentral()
     google()
     maven { url "https://plugins.gradle.org/m2/" }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
