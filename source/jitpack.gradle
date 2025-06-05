@@ -1,0 +1,58 @@
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'maven-publish'
+apply plugin: 'java'
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier = 'javadoc'
+}
+
+gradlePlugin {
+    plugins {
+        fatAar {
+            id = 'com.kezong.fat-aar'
+            implementationClass = 'com.kezong.fataar.FatAarPlugin'
+        }
+    }
+}
+
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            groupId = PUBLISH_GROUP_ID
+            artifactId = PUBLISH_ARTIFACT_ID
+            version = PUBLISH_VERSION
+
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                name = PUBLISH_ARTIFACT_ID
+                description = 'A gradle plugin that merges dependencies into the final aar file works with AGP 8.2.2 Gradle 8.2.1'
+                url = 'https://github.com/shenghua-ok/fat-aar-android'
+                licenses {
+                    license {
+                        name = 'The MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'shenghua'
+                        name = 'shenghua'
+                        email = 'patrik_lsh@163.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:github.com/shenghua-ok/fat-aar-android.git'
+                    developerConnection = 'scm:git:ssh://github.com/shenghua-ok/fat-aar-android.git'
+                    url = 'https://github.com/shenghua-ok/fat-aar-android'
+                }
+            }
+        }
+    }
+}

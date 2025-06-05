@@ -1,8 +1,8 @@
 package com.kezong.fataar
 
-import com.android.build.gradle.api.LibraryVariant
+import com.android.build.api.variant.LibraryVariant
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.tasks.ManifestProcessorTask
+import groovy.json.JsonOutput
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.ResolvedArtifact
@@ -54,8 +54,7 @@ class VariantProcessor {
     }
 
     void processVariant(Collection<ResolvedArtifact> artifacts,
-                        Collection<ResolvableDependency> dependencies,
-                        RClassesTransform transform) {
+                        Collection<ResolvableDependency> dependencies) {
         String taskPath = 'pre' + mVariant.name.capitalize() + 'Build'
         TaskProvider prepareTask = mProject.tasks.named(taskPath)
         if (prepareTask == null) {
@@ -75,11 +74,11 @@ class VariantProcessor {
         processConsumerProguard()
         processGenerateProguard()
         processDataBinding(bundleTask)
-        processRClasses(transform, bundleTask)
+        processRClasses(bundleTask)
     }
 
     private static void printEmbedArtifacts(Collection<ResolvedArtifact> artifacts,
-                                     Collection<ResolvedDependency> dependencies) {
+                                            Collection<ResolvedDependency> dependencies) {
         Collection<String> moduleNames = artifacts.stream().map { it.moduleVersion.id.name }.collect()
         dependencies.each { dependency ->
             if (!moduleNames.contains(dependency.moduleName)) {
@@ -94,7 +93,7 @@ class VariantProcessor {
                 return
             }
 
-            FatUtils.logAnytime("[embed detected][$self.type]${self.moduleVersion.id}")
+            FatUtils.logAnytime("[embed detected][$self.type]${self.moduleVersion.id}###[${FatUtils.formatDataSize(self.file.size())}]")
             moduleNames.remove(self.moduleVersion.id.name)
 
             dependency.allModuleArtifacts.each { artifact ->
@@ -102,7 +101,7 @@ class VariantProcessor {
                     return
                 }
                 if (artifact != self) {
-                    FatUtils.logAnytime("    - [embed detected][transitive][$artifact.type]${artifact.moduleVersion.id}")
+                    FatUtils.logAnytime("    - [embed detected][transitive][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
                     moduleNames.remove(artifact.moduleVersion.id.name)
                 }
             }
@@ -111,7 +110,7 @@ class VariantProcessor {
         moduleNames.each { name ->
             ResolvedArtifact artifact = artifacts.find { it.moduleVersion.id.name == name }
             if (artifact != null) {
-                FatUtils.logAnytime("[embed detected][$artifact.type]${artifact.moduleVersion.id}")
+                FatUtils.logAnytime("[embed detected][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
             }
         }
     }
@@ -177,35 +176,66 @@ class VariantProcessor {
         return task
     }
 
-    private void processRClasses(RClassesTransform transform, TaskProvider<Task> bundleTask) {
+    private void processRClasses(TaskProvider<Task> bundleTask) {
         TaskProvider reBundleTask = configureReBundleAarTask(bundleTask)
-        TaskProvider transformTask = mProject.tasks.named("transformClassesWith${transform.name.capitalize()}For${mVariant.name.capitalize()}")
+        TaskProvider transformTask = mProject.tasks.named("transform${mVariant.name.capitalize()}ClassesWithAsm")
         transformTask.configure {
             it.dependsOn(mMergeClassTask)
         }
         if (mProject.fataar.transformR) {
-            transformRClasses(transform, transformTask, bundleTask, reBundleTask)
+            transformRClasses(transformTask, bundleTask, reBundleTask)
         } else {
             generateRClasses(bundleTask, reBundleTask)
         }
     }
 
-    private void transformRClasses(RClassesTransform transform, TaskProvider transformTask, TaskProvider bundleTask, TaskProvider reBundleTask) {
-        transform.putTargetPackage(mVariant.name, mVariant.getApplicationId())
-        transformTask.configure {
-                    doFirst {
-                        // library package name parsed by aar's AndroidManifest.xml
-                        // so must put after explode tasks perform.
-                        Collection libraryPackages = mAndroidArchiveLibraries
-                                .stream()
-                                .map { it.packageName }
-                                .collect()
-                        transform.putLibraryPackages(mVariant.name, libraryPackages);
-                    }
+    private void transformRClasses(TaskProvider transformTask, TaskProvider bundleTask, TaskProvider reBundleTask) {
+        TaskProvider mapJsonTask = mProject.tasks.register("gerenerate${mVariant.name.capitalize()}RMapJson") {
+            def mappingFile = VersionAdapter.getRMappingJsonProvider(mProject).get().asFile
+            outputs.file(mappingFile)
+            doLast {
+                Collection libraryPackages = mAndroidArchiveLibraries
+                        .stream()
+                        .map { it.packageName }
+                        .collect()
+                def map = buildTransformTable(mVariant.namespace.get(), libraryPackages)
+                try {
+                    mappingFile.parentFile.mkdirs()
+                    mappingFile.text = JsonOutput.prettyPrint(JsonOutput.toJson(map))
+                    FatUtils.logAnytime("Mapping file created at: ${mappingFile.absolutePath}")
+                } catch (Exception e) {
+                    FatUtils.logAnytime("Write file failed: ${e.message}")
+                    throw e
                 }
+            }
+        }
+        transformTask.configure {
+            dependsOn(mapJsonTask)
+        }
         bundleTask.configure {
             finalizedBy(reBundleTask)
         }
+    }
+
+    private static Map<String, String> buildTransformTable(String targetPackage, Collection<String> libraryPackages) {
+        if (targetPackage == null || libraryPackages == null) {
+            return null;
+        }
+
+        final List<String> resourceTypes = Arrays.asList("anim", "animator", "array", "attr", "bool", "color", "dimen",
+                "drawable", "font", "fraction", "id", "integer", "interpolator", "layout", "menu", "mipmap", "navigation",
+                "plurals", "raw", "string", "style", "styleable", "transition", "xml");
+
+        HashMap<String, String> map = new HashMap<>();
+        for (String resource : resourceTypes) {
+            String targetClass = targetPackage.replace(".", "/") + "/R\$${resource}";
+            for (String libraryPackage : libraryPackages) {
+                String fromClass = libraryPackage.replace(".", "/") + "/R\$${resource}";
+                map.put(fromClass, targetClass);
+            }
+        }
+
+        return map;
     }
 
     private void generateRClasses(TaskProvider<Task> bundleTask, TaskProvider<Task> reBundleTask) {
@@ -251,7 +281,7 @@ class VariantProcessor {
     static def getTaskDependency(ResolvedArtifact artifact) {
         try {
             return artifact.buildDependencies
-        } catch(MissingPropertyException ignore) {
+        } catch (MissingPropertyException ignore) {
             // since gradle 6.8.0, property is changed;
             return artifact.builtBy
         }
@@ -317,35 +347,40 @@ class VariantProcessor {
      * merge manifest
      */
     private void processManifest() {
-        ManifestProcessorTask processManifestTask = mVersionAdapter.getProcessManifest()
-
-        File manifestOutput
-        if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "4.2.0-alpha07") >= 0) {
-            manifestOutput = mProject.file("${mProject.buildDir.path}/intermediates/merged_manifest/${mVariant.name}/AndroidManifest.xml")
-        } else if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "3.3.0") >= 0) {
-            manifestOutput = mProject.file("${mProject.buildDir.path}/intermediates/library_manifest/${mVariant.name}/AndroidManifest.xml")
-        } else {
-            manifestOutput = mProject.file(processManifestTask.getManifestOutputDirectory().absolutePath + "/AndroidManifest.xml")
-        }
-
-        final List<File> inputManifests = new ArrayList<>()
-        for (archiveLibrary in mAndroidArchiveLibraries) {
-            inputManifests.add(archiveLibrary.getManifest())
-        }
-
         TaskProvider<LibraryManifestMerger> manifestsMergeTask = mProject.tasks.register("merge${mVariant.name.capitalize()}Manifest", LibraryManifestMerger) {
-            setGradleVersion(mProject.getGradle().getGradleVersion())
-            setGradlePluginVersion(VersionAdapter.AGPVersion)
-            setMainManifestFile(manifestOutput)
-            setSecondaryManifestFiles(inputManifests)
-            setOutputFile(manifestOutput)
         }
+        def manifestTaskProvider = mProject.tasks.named("process${mVariant.name.capitalize()}Manifest")
+        manifestTaskProvider.configure { processManifestTask ->
+            File manifestOutput
+            try {
+                //8.0.0+
+                manifestOutput = processManifestTask.manifestOutputFile.get().asFile
+            } catch (MissingPropertyException | MissingMethodException e) {
+                if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "4.2.0-alpha07") >= 0) {
+                    manifestOutput = mProject.file("${mProject.buildDir.path}/intermediates/merged_manifest/${mVariant.name}/AndroidManifest.xml")
+                } else if (FatUtils.compareVersion(VersionAdapter.AGPVersion, "3.3.0") >= 0) {
+                    manifestOutput = mProject.file("${mProject.buildDir.path}/intermediates/library_manifest/${mVariant.name}/AndroidManifest.xml")
+                } else {
+                    manifestOutput = mProject.file(processManifestTask.getManifestOutputDirectory().absolutePath + "/AndroidManifest.xml")
+                }
+            }
 
-        processManifestTask.dependsOn(mExplodeTasks)
-        processManifestTask.inputs.files(inputManifests)
-        processManifestTask.doLast {
-            // Merge manifests
-            manifestsMergeTask.get().doTaskAction()
+            final List<File> inputManifests = new ArrayList<>()
+            for (archiveLibrary in mAndroidArchiveLibraries) {
+                inputManifests.add(archiveLibrary.getManifest())
+            }
+
+            processManifestTask.dependsOn(mExplodeTasks)
+            processManifestTask.inputs.files(inputManifests)
+            processManifestTask.doLast {
+                // Merge manifests
+                manifestsMergeTask.get().setGradleVersion(mProject.getGradle().getGradleVersion())
+                manifestsMergeTask.get().setGradlePluginVersion(VersionAdapter.AGPVersion)
+                manifestsMergeTask.get().setMainManifestFile(manifestOutput)
+                manifestsMergeTask.get().setSecondaryManifestFiles(inputManifests)
+                manifestsMergeTask.get().setOutputFile(manifestOutput)
+                manifestsMergeTask.get().doTaskAction()
+            }
         }
     }
 
@@ -359,7 +394,7 @@ class VariantProcessor {
                 if (kotlinCompile != null) {
                     dependsOn(kotlinCompile)
                 }
-            } catch(Exception ignore) {
+            } catch (Exception ignore) {
 
             }
 
@@ -432,7 +467,7 @@ class VariantProcessor {
      * merge classes and jars
      */
     private void processClassesAndJars(TaskProvider<Task> bundleTask) {
-        boolean isMinifyEnabled = mVariant.getBuildType().isMinifyEnabled()
+        def isMinifyEnabled = mProject.android.buildTypes.findByName(mVariant.buildType)?.minifyEnabled ?: false
 
         TaskProvider syncLibTask = mProject.tasks.named(mVersionAdapter.getSyncLibJarsTaskPath())
         TaskProvider extractAnnotationsTask = mProject.tasks.named("extract${mVariant.name.capitalize()}Annotations")
@@ -468,16 +503,14 @@ class VariantProcessor {
         if (resourceGenTask == null) {
             throw new RuntimeException("Can not find task ${taskPath}!")
         }
-
         resourceGenTask.configure {
             dependsOn(mExplodeTasks)
-
-            mProject.android.sourceSets.each { DefaultAndroidSourceSet sourceSet ->
-                if (sourceSet.name == mVariant.name) {
-                    for (archiveLibrary in mAndroidArchiveLibraries) {
-                        FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
-                        sourceSet.res.srcDir(archiveLibrary.resFolder)
-                    }
+        }
+        mProject.android.sourceSets.each { DefaultAndroidSourceSet sourceSet ->
+            if (sourceSet.name == mVariant.name) {
+                for (archiveLibrary in mAndroidArchiveLibraries) {
+                    FatUtils.logInfo("Merge resource，Library res：${archiveLibrary.resFolder}")
+                    sourceSet.res.srcDir(archiveLibrary.resFolder)
                 }
             }
         }
@@ -489,19 +522,21 @@ class VariantProcessor {
      * AaptOptions.setIgnoreAssets and AaptOptions.setIgnoreAssetsPattern will work as normal
      */
     private void processAssets() {
-        Task assetsTask = mVersionAdapter.getMergeAssets()
-        if (assetsTask == null) {
+        String mergeAssetsTaskName = "package${mVariant.name.capitalize()}Assets"
+        TaskProvider mergeAssetsTask = mProject.tasks.named(mergeAssetsTaskName)
+        if (mergeAssetsTask == null) {
             throw new RuntimeException("Can not find task in variant.getMergeAssets()!")
         }
-
-        assetsTask.dependsOn(mExplodeTasks)
-        assetsTask.doFirst {
-            mProject.android.sourceSets.each {
-                if (it.name == mVariant.name) {
-                    for (archiveLibrary in mAndroidArchiveLibraries) {
-                        if (archiveLibrary.assetsFolder != null && archiveLibrary.assetsFolder.exists()) {
-                            FatUtils.logInfo("Merge assets，Library assets folder：${archiveLibrary.assetsFolder}")
-                            it.assets.srcDir(archiveLibrary.assetsFolder)
+        mergeAssetsTask.configure {
+            dependsOn(mExplodeTasks)
+            doFirst {
+                mProject.android.sourceSets.each {
+                    if (it.name == mVariant.name) {
+                        for (archiveLibrary in mAndroidArchiveLibraries) {
+                            if (archiveLibrary.assetsFolder != null && archiveLibrary.assetsFolder.exists()) {
+                                FatUtils.logInfo("Merge assets，Library assets folder：${archiveLibrary.assetsFolder}")
+                                it.assets.srcDir(archiveLibrary.assetsFolder)
+                            }
                         }
                     }
                 }
@@ -518,15 +553,14 @@ class VariantProcessor {
         if (mergeJniLibsTask == null) {
             throw new RuntimeException("Can not find task ${taskPath}!")
         }
-
         mergeJniLibsTask.configure {
             dependsOn(mExplodeTasks)
-
             doFirst {
-                for (archiveLibrary in mAndroidArchiveLibraries) {
-                    if (archiveLibrary.jniFolder != null && archiveLibrary.jniFolder.exists()) {
-                        mProject.android.sourceSets.each {
-                            if (it.name == mVariant.name) {
+                mProject.android.sourceSets.each {
+                    if (it.name == mVariant.name) {
+                        for (archiveLibrary in mAndroidArchiveLibraries) {
+                            if (archiveLibrary.jniFolder != null && archiveLibrary.jniFolder.exists()) {
+                                FatUtils.logInfo("Merge resource，Library jniLibs：${archiveLibrary.jniFolder}")
                                 it.jniLibs.srcDir(archiveLibrary.jniFolder)
                             }
                         }
@@ -534,6 +568,7 @@ class VariantProcessor {
                 }
             }
         }
+
     }
 
     /**
@@ -578,7 +613,7 @@ class VariantProcessor {
         try {
             String mergeName = 'merge' + mVariant.name.capitalize() + 'GeneratedProguardFiles'
             mergeGenerateProguardTask = mProject.tasks.named(mergeName)
-        } catch(Exception ignore) {
+        } catch (Exception ignore) {
             return
         }
 

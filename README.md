@@ -15,14 +15,15 @@ The solution of merging aar works with [AGP][3] `3.0` and higher. (Tested in AGP
 
 ### Step 1: Add classpath
 #### Add snippet below to your root build script file:
-For Maven Central (The lastest release is available on [Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.kezong/fat-aar)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.0)):
 ```groovy
 buildscript {
     repositories {
         mavenCentral()
+        maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.kezong:fat-aar:1.3.8'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.0'
     }
 }
 ```
@@ -131,12 +132,15 @@ See [anatomy of an aar file here][2].
 | 1.3.4 - 1.3.5 | 3.0.0 - 4.1.0 | 4.9+ |
 | 1.3.6 | 3.0.0 - 4.2.0 | 4.9+ |
 | 1.3.8 | 3.0.0+ | 4.9+ |
+| 1.4.0 | 8.2.2 | 8.2.1 |
 
 The following link which version of Gradle is required for each version of the Android Gradle plugin. For the best performance, you should use the latest possible version of both Gradle and the plugin.
 
 [Plugin version and Required Gradle version](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## Version Log
+- [1.4.0](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.0>)
+  - Compatibility with AGP 8.2.2 and Gradle 8.2.1
 - [1.3.8](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.8>)
   - Fix the issue that plugin cannot be used in jdk 1.8 [#371](https://github.com/kezong/fat-aar-android/issues/371)
 - [1.3.7](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.7>)
