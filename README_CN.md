@@ -13,7 +13,7 @@
 
 #### 第一步: Apply classpath
 ##### 添加以下代码到你工程根目录下的`build.gradle`文件中:
-For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.0)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.1)):
 ```groovy
 buildscript {
     repositories {
@@ -21,7 +21,7 @@ buildscript {
         maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.0'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.1'
     }
 }
 ```
@@ -146,12 +146,12 @@ AAR是Android提供的一种官方文件形式；
 | 1.3.4 | 3.0.0 - 4.1.0 | 4.9+ |
 | 1.3.6 | 3.0.0 - 4.2.0 | 4.9+ |
 | 1.3.8 | 3.0.0+ | 4.9+ |
-| 1.4.0 | 8.2.2 | 8.2.1 |
+| 1.4.1 | 8.2.2 | 8.2.1 |
 
 [Gradle Plugin和所需求的Gradle版本官方文档](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## 更新日志
-- [1.4.0](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.0>)
+- [1.4.1](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.1>)
   - Compatibility with AGP 8.2.2 and Gralde8.2.1
 - [1.3.8](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.8>)
   - Fix the issue that plugin cannot be used in jdk 1.8 [#371](https://github.com/kezong/fat-aar-android/issues/371)
