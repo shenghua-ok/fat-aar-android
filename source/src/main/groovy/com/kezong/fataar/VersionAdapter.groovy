@@ -157,6 +157,6 @@ class VersionAdapter {
     }
 
     static Provider<RegularFile> getRMappingJsonProvider(Project project) {
-        return project.layout.buildDirectory.file("tmp/r_classes_mapping.json")
+        return project.layout.buildDirectory.file("tmp/r_classes_mappings.json")
     }
 }

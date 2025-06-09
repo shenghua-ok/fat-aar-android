@@ -75,6 +75,7 @@ class VariantProcessor {
         processGenerateProguard()
         processDataBinding(bundleTask)
         processRClasses(bundleTask)
+        processMapSourceSetPathsTask()
     }
 
     private static void printEmbedArtifacts(Collection<ResolvedArtifact> artifacts,
@@ -179,9 +180,6 @@ class VariantProcessor {
     private void processRClasses(TaskProvider<Task> bundleTask) {
         TaskProvider reBundleTask = configureReBundleAarTask(bundleTask)
         TaskProvider transformTask = mProject.tasks.named("transform${mVariant.name.capitalize()}ClassesWithAsm")
-        transformTask.configure {
-            it.dependsOn(mMergeClassTask)
-        }
         if (mProject.fataar.transformR) {
             transformRClasses(transformTask, bundleTask, reBundleTask)
         } else {
@@ -209,8 +207,11 @@ class VariantProcessor {
                 }
             }
         }
+        mapJsonTask.configure {
+            mustRunAfter(mMergeClassTask)
+        }
         transformTask.configure {
-            dependsOn(mapJsonTask)
+            it.dependsOn(mapJsonTask)
         }
         bundleTask.configure {
             finalizedBy(reBundleTask)
@@ -637,6 +638,17 @@ class VariantProcessor {
                     e.printStackTrace()
                 }
             }
+        }
+    }
+
+    private void processMapSourceSetPathsTask() {
+        def isMinifyEnabled = mProject.android.buildTypes.findByName(mVariant.buildType)?.minifyEnabled ?: false
+        if (!isMinifyEnabled) {
+            return
+        }
+        TaskProvider mapSourceSetPathsTask = mProject.tasks.named("map${mVariant.name.capitalize()}SourceSetPaths")
+        mapSourceSetPathsTask.configure {
+            dependsOn(mExplodeTasks)
         }
     }
 }
