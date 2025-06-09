@@ -24,3 +24,19 @@
 -dontshrink
 -dontobfuscate
 -dontpreverify
+#for assembleRelease on Gradle 8.0+
+-dontwarn com.bumptech.glide.disklrucache.DiskLruCache$Editor
+-dontwarn com.bumptech.glide.disklrucache.DiskLruCache$Value
+-dontwarn com.bumptech.glide.disklrucache.DiskLruCache
+-dontwarn com.bumptech.glide.gifdecoder.GifDecoder$BitmapProvider
+-dontwarn com.bumptech.glide.gifdecoder.GifDecoder
+-dontwarn com.bumptech.glide.gifdecoder.GifHeader
+-dontwarn com.bumptech.glide.gifdecoder.GifHeaderParser
+-dontwarn com.bumptech.glide.gifdecoder.StandardGifDecoder
+-dontwarn com.google.errorprone.annotations.CanIgnoreReturnValue
+-dontwarn com.google.errorprone.annotations.ForOverride
+-dontwarn com.google.errorprone.annotations.concurrent.LazyInit
+-dontwarn com.google.j2objc.annotations.RetainedWith
+-dontwarn com.google.j2objc.annotations.Weak
+-dontwarn com.kezong.demo.libaar.BR
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement

@@ -84,7 +84,7 @@ publishing {
         }
     }
 
-for sonatype：
+//for sonatype：
     repositories {
         // The repository to publish to, Sonatype/MavenCentral
         maven {
