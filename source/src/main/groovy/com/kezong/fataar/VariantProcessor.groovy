@@ -183,7 +183,7 @@ class VariantProcessor {
         if (mProject.fataar.transformR) {
             transformRClasses(transformTask, bundleTask, reBundleTask)
         } else {
-            generateRClasses(bundleTask, reBundleTask)
+            generateRClasses(transformTask, bundleTask, reBundleTask)
         }
     }
 
@@ -191,7 +191,7 @@ class VariantProcessor {
         TaskProvider mapJsonTask = mProject.tasks.register("gerenerate${mVariant.name.capitalize()}RMapJson") {
             def mappingFile = VersionAdapter.getRMappingJsonProvider(mProject).get().asFile
             outputs.file(mappingFile)
-            doLast {
+            doFirst {
                 Collection libraryPackages = mAndroidArchiveLibraries
                         .stream()
                         .map { it.packageName }
@@ -208,7 +208,7 @@ class VariantProcessor {
             }
         }
         mapJsonTask.configure {
-            mustRunAfter(mMergeClassTask)
+            dependsOn(mMergeClassTask)
         }
         transformTask.configure {
             it.dependsOn(mapJsonTask)
@@ -239,7 +239,10 @@ class VariantProcessor {
         return map;
     }
 
-    private void generateRClasses(TaskProvider<Task> bundleTask, TaskProvider<Task> reBundleTask) {
+    private void generateRClasses(TaskProvider transformTask, TaskProvider<Task> bundleTask, TaskProvider<Task> reBundleTask) {
+        transformTask.configure {
+            dependsOn(mMergeClassTask)
+        }
         RClassesGenerate rClassesGenerate = new RClassesGenerate(mProject, mVariant, mAndroidArchiveLibraries)
         TaskProvider RTask = rClassesGenerate.configure(reBundleTask)
         bundleTask.configure {
