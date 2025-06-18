@@ -75,7 +75,7 @@ class VariantProcessor {
         processGenerateProguard()
         processDataBinding(bundleTask)
         processRClasses(bundleTask)
-        processMapSourceSetPathsTask()
+        processCompatibleWith8()
     }
 
     private static void printEmbedArtifacts(Collection<ResolvedArtifact> artifacts,
@@ -322,27 +322,29 @@ class VariantProcessor {
                 def group = artifact.getModuleVersion().id.group.capitalize()
                 def name = artifact.name.capitalize()
                 String taskName = "explode${group}${name}${mVariant.name.capitalize()}"
-                Task explodeTask = mProject.tasks.create(taskName, Copy) {
-                    from mProject.zipTree(artifact.file.absolutePath)
-                    into zipFolder
+                if (!mProject.tasks.names.contains(taskName)) {
+                    Task explodeTask = mProject.tasks.register(taskName, Copy) {
+                        from mProject.zipTree(artifact.file.absolutePath)
+                        into zipFolder
 
-                    doFirst {
-                        // Delete previously extracted data.
-                        zipFolder.deleteDir()
+                        doFirst {
+                            // Delete previously extracted data.
+                            zipFolder.deleteDir()
+                        }
+                    }.get()
+
+                    if (dependencies.size() == 0) {
+                        explodeTask.dependsOn(prepareTask)
+                    } else {
+                        explodeTask.dependsOn(dependencies.first())
                     }
+                    Task javacTask = mVersionAdapter.getJavaCompileTask()
+                    javacTask.dependsOn(explodeTask)
+                    bundleTask.configure {
+                        dependsOn(explodeTask)
+                    }
+                    mExplodeTasks.add(explodeTask)
                 }
-
-                if (dependencies.size() == 0) {
-                    explodeTask.dependsOn(prepareTask)
-                } else {
-                    explodeTask.dependsOn(dependencies.first())
-                }
-                Task javacTask = mVersionAdapter.getJavaCompileTask()
-                javacTask.dependsOn(explodeTask)
-                bundleTask.configure {
-                    dependsOn(explodeTask)
-                }
-                mExplodeTasks.add(explodeTask)
             }
         }
     }
@@ -644,6 +646,11 @@ class VariantProcessor {
         }
     }
 
+    private void processCompatibleWith8() {
+        processMapSourceSetPathsTask()
+        processVerifyReleaseSources()
+    }
+
     private void processMapSourceSetPathsTask() {
         def isMinifyEnabled = mProject.android.buildTypes.findByName(mVariant.buildType)?.minifyEnabled ?: false
         if (!isMinifyEnabled) {
@@ -652,6 +659,18 @@ class VariantProcessor {
         TaskProvider mapSourceSetPathsTask = mProject.tasks.named("map${mVariant.name.capitalize()}SourceSetPaths")
         mapSourceSetPathsTask.configure {
             dependsOn(mExplodeTasks)
+        }
+    }
+
+    private void processVerifyReleaseSources() {
+        def isMinifyEnabled = mProject.android.buildTypes.findByName(mVariant.buildType)?.minifyEnabled ?: false
+        if (!isMinifyEnabled) {
+            return
+        }
+        mProject.tasks.matching {
+            it.name.startsWith("verify${mVariant.name.capitalize()}Resources")
+        }.configureEach {
+            it.enabled = false
         }
     }
 }

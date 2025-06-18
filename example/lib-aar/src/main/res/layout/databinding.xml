@@ -1,19 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <data>
-        <variable name="user" type="com.kezong.demo.libaar.User"/>
+
+        <variable
+            name="user"
+            type="com.kezong.demo.libaar.User" />
     </data>
+
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{user.name}"/>
-        <TextView android:layout_width="wrap_content"
+            android:text="@{user.name}" />
+
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{user.sex}"/>
+            android:text="@{user.sex}" />
+
+<!--        <FrameLayout-->
+<!--            android:id="@+id/host_fragment"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"/>-->
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/nav_host_fragment"
+            android:name="androidx.navigation.fragment.NavHostFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:defaultNavHost="true"
+            app:navGraph="@navigation/nav_graph" />
     </LinearLayout>
 </layout>
