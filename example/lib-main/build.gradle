@@ -88,16 +88,16 @@ dependencies {
     // local full aar dependency, just build in flavor1
     flavor1Embed project(path: ':lib-aar-local', configuration: 'default')
     // local full aar dependency, just build in debug
-    debugEmbed (name:'lib-aar-local2', ext:'aar')
+    debugEmbed(name: 'lib-aar-local2', ext: 'aar')
     // remote dependency
     embed 'com.google.guava:guava:20.0'
     // remote aar dependency
-    embed ('com.facebook.fresco:fresco:1.12.0') {
+    embed('com.facebook.fresco:fresco:1.12.0') {
         // exclude any group or module
         // exclude(group:'com.facebook.soloader', module:'soloader')
     }
     // remote aar dependency
-    embed ('com.github.bumptech.glide:glide:4.11.0') {
+    embed('com.github.bumptech.glide:glide:4.11.0') {
         // If transitive = false, it will not embed dependencies declared in pom.xml
         // If fataar.transitive = false, There is no need to declare.
         transitive = false

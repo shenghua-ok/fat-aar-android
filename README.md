@@ -10,12 +10,15 @@
 >
 >**P.S. Hope Google can support this damn feature as soon as possible.**
 
-The solution of merging aar works with [AGP][3] `3.0` and higher. (Tested in AGP 3.0 - 7.1.0, and Gradle 4.9 - 7.3)
+The solution of merging aar works with [AGP][8.3.2] and Gradle 8.2.1.
+
+Alert:if you want to use fat-aar under AGP8.0(means 3.0~8.0),please visit original author page:https://github.com/kezong/fat-aar-android
+
 ## Getting Started
 
 ### Step 1: Add classpath
 #### Add snippet below to your root build script file:
-For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.1)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2)):
 ```groovy
 buildscript {
     repositories {
@@ -23,7 +26,7 @@ buildscript {
         maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.1'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.2'
     }
 }
 ```
@@ -132,13 +135,15 @@ See [anatomy of an aar file here][2].
 | 1.3.4 - 1.3.5 | 3.0.0 - 4.1.0 | 4.9+ |
 | 1.3.6 | 3.0.0 - 4.2.0 | 4.9+ |
 | 1.3.8 | 3.0.0+ | 4.9+ |
-| 1.4.1 | 8.2.2 | 8.2.1 |
+| 1.4.2 | 8.2.2 | 8.2.1 |
 
 The following link which version of Gradle is required for each version of the Android Gradle plugin. For the best performance, you should use the latest possible version of both Gradle and the plugin.
 
 [Plugin version and Required Gradle version](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## Version Log
+- [1.4.2](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2>)
+  - Compatible with androidx.navigation component.
 - [1.4.1](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.1>)
   - Compatibility with AGP 8.2.2 and Gradle 8.2.1
 - [1.3.8](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.8>)
