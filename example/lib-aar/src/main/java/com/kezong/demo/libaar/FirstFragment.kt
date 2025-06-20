@@ -11,7 +11,8 @@ class FirstFragment : Fragment(R.layout.fragment_first) {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<Button>(R.id.button_navigate).setOnClickListener {
-            findNavController().navigate(R.id.action_firstFragment_to_secondFragment)
+            val bundle = SecondFragmentArgs.Builder().setAge("100").build().toBundle()
+            findNavController().navigate(R.id.action_firstFragment_to_secondFragment, bundle)
         }
     }
 }

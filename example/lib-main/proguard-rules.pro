@@ -40,3 +40,4 @@
 -dontwarn com.google.j2objc.annotations.Weak
 -dontwarn com.kezong.demo.libaar.BR
 -dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement
+-dontwarn java.lang.invoke.StringConcatFactory
