@@ -111,7 +111,7 @@ class VariantProcessor {
         moduleNames.each { name ->
             ResolvedArtifact artifact = artifacts.find { it.moduleVersion.id.name == name }
             if (artifact != null) {
-                FatUtils.logAnytime("[embed detected][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
+                FatUtils.logAnytime("[embed detected][unresovled][$artifact.type]${artifact.moduleVersion.id}###[${FatUtils.formatDataSize(artifact.file.size())}]")
             }
         }
     }
@@ -646,31 +646,42 @@ class VariantProcessor {
         }
     }
 
+
     private void processCompatibleWith8() {
         processMapSourceSetPathsTask()
         processVerifyReleaseSources()
+        processGenSafeArgsTask()
     }
 
     private void processMapSourceSetPathsTask() {
-        def isMinifyEnabled = mProject.android.buildTypes.findByName(mVariant.buildType)?.minifyEnabled ?: false
-        if (!isMinifyEnabled) {
+        String taskName = "map${mVariant.name.capitalize()}SourceSetPaths"
+        if (!mProject.tasks.names.contains(taskName)) {
             return
         }
-        TaskProvider mapSourceSetPathsTask = mProject.tasks.named("map${mVariant.name.capitalize()}SourceSetPaths")
+        TaskProvider mapSourceSetPathsTask = mProject.tasks.named(taskName)
         mapSourceSetPathsTask.configure {
             dependsOn(mExplodeTasks)
         }
     }
 
     private void processVerifyReleaseSources() {
-        def isMinifyEnabled = mProject.android.buildTypes.findByName(mVariant.buildType)?.minifyEnabled ?: false
-        if (!isMinifyEnabled) {
+        String taskName = "verify${mVariant.name.capitalize()}Resources"
+        if (!mProject.tasks.names.contains(taskName)) {
             return
         }
-        mProject.tasks.matching {
-            it.name.startsWith("verify${mVariant.name.capitalize()}Resources")
-        }.configureEach {
-            it.enabled = false
+        TaskProvider verifyResTask = mProject.tasks.named(taskName)
+        verifyResTask.get().enabled = false
+    }
+
+    private void processGenSafeArgsTask() {
+        String taskName = "generateSafeArgs${mVariant.name.capitalize()}"
+        if (!mProject.tasks.names.contains(taskName)) {
+            return
+        }
+        TaskProvider genSafeArgsTask = mProject.tasks.named(taskName)
+        genSafeArgsTask.configure {
+            dependsOn(mExplodeTasks)
         }
     }
+
 }
