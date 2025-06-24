@@ -7,14 +7,14 @@
 >
 >**P.S. 希望Google官方能够尽快支持该功能**
 
-该插件提供了将library以及它依赖的library一起打包成一个完整aar的解决方案，支持AGP 8.2.2 和Gradle8.2.1。
-注意：你如果想要使用8.0以下的版本，请访问原作者仓库：https://github.com/kezong/fat-aar-android
+该插件提供了将library以及它依赖的library一起打包成一个完整aar的解决方案，支持AGP 8.2.2 和Gradle 8.2.1 ~ 8.14.2
+##### 注意：你如果想要使用8.0以下的版本，请访问原作者仓库：https://github.com/kezong/fat-aar-android
 
 ## 如何使用
 
 #### 第一步: Apply classpath
 ##### 添加以下代码到你工程根目录下的`build.gradle`文件中:
-For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.3)):
 ```groovy
 buildscript {
     repositories {
@@ -22,7 +22,7 @@ buildscript {
         maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.2'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.3'
     }
 }
 ```
@@ -147,12 +147,14 @@ AAR是Android提供的一种官方文件形式；
 | 1.3.4 | 3.0.0 - 4.1.0 | 4.9+ |
 | 1.3.6 | 3.0.0 - 4.2.0 | 4.9+ |
 | 1.3.8 | 3.0.0+ | 4.9+ |
-| 1.4.2 | 8.2.2 | 8.2.1 |
+| 1.4.3 | 8.2.2 | 8.2.1 - 8.14.2 |
 
 [Gradle Plugin和所需求的Gradle版本官方文档](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## 更新日志
-- [1.4.1](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2>)
+- [1.4.3](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.3>)
+  - Compatible with Gradle from 8.2.1 to 8.14.2.
+- [1.4.2](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2>)
   - Compatible with androidx.Navigation component.
 - [1.4.1](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.1>)
   - Compatibility with AGP 8.2.2 and Gralde8.2.1
@@ -259,10 +261,13 @@ AAR是Android提供的一种官方文件形式；
   - 如果`minifyEnabled`设置为true，编译时会根据proguard规则过滤工程中没有引用到的类，导致App集成时找不到对象，因为大多数AAR都是提供接口的SDK，建议大家仔细梳理proguard文件。
 
 ## 致谢
-* [android-fat-aar][1]
-* [fat-aar-plugin][4]
 
-[1]: https://github.com/adwiv/android-fat-aar
-[2]: https://developer.android.com/studio/projects/android-library.html#aar-contents
-[3]: https://developer.android.com/studio/releases/gradle-plugin.html
-[4]: https://github.com/Vigi0303/fat-aar-plugin
+* [android-fat-aar-3.0~7.0][1]
+* [android-fat-aar][2]
+* [fat-aar-plugin][5]
+
+[2]: https://github.com/kezong/fat-aar-android
+[2]: https://github.com/adwiv/android-fat-aar
+[3]: https://developer.android.com/studio/projects/android-library.html#aar-contents
+[4]: https://developer.android.com/studio/releases/gradle-plugin.html
+[5]: https://github.com/Vigi0303/fat-aar-plugin

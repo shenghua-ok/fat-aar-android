@@ -11,6 +11,10 @@ import org.gradle.api.ProjectConfigurationException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.artifacts.ResolvedDependency
+import org.gradle.api.internal.file.FileResolver
+import org.gradle.api.internal.tasks.TaskDependencyFactory
+import org.gradle.internal.model.CalculatedValueContainerFactory
+import javax.inject.Inject
 
 /**
  * plugin entry
@@ -29,6 +33,21 @@ class FatAarPlugin implements Plugin<Project> {
     private final Collection<Configuration> embedConfigurations = new ArrayList<>()
 
     private def variantDataMap = [:]  // key: variantName, value: map with artifacts, dependencies
+
+    private CalculatedValueContainerFactory calculatedValueContainerFactory
+
+    private TaskDependencyFactory taskDependencyFactory
+
+    private FileResolver fileResolver
+
+    @Inject
+    FatAarPlugin(CalculatedValueContainerFactory calculatedValueContainerFactory,
+                 TaskDependencyFactory taskDependencyFactory,
+                 FileResolver fileResolver) {
+        this.calculatedValueContainerFactory = calculatedValueContainerFactory
+        this.taskDependencyFactory = taskDependencyFactory
+        this.fileResolver = fileResolver
+    }
 
     @Override
     void apply(Project project) {
@@ -177,7 +196,7 @@ class FatAarPlugin implements Plugin<Project> {
             }
 
             if (!match) {
-                def flavorArtifact = FlavorArtifact.createFlavorArtifact(project, variant, dependency)
+                def flavorArtifact = FlavorArtifact.createFlavorArtifact(project, variant, dependency, calculatedValueContainerFactory, fileResolver, taskDependencyFactory)
                 if (flavorArtifact != null) {
 //                    FatUtils.logInLoop("[unresolvedFile][$flavorArtifact.type]${flavorArtifact.moduleVersion.id}###[${FatUtils.formatDataSize(flavorArtifact.file.size())}]")
                     artifactList.add(flavorArtifact)
