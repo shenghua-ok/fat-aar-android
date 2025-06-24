@@ -155,9 +155,8 @@ AAR是Android提供的一种官方文件形式；
 - [1.4.3](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.3>)
   - Compatible with Gradle from 8.2.1 to 8.14.2.
 - [1.4.2](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2>)
-  - Compatible with androidx.Navigation component.
-- [1.4.1](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.1>)
   - Compatibility with AGP 8.2.2 and Gralde8.2.1
+  - Compatible with androidx.Navigation component.
 - [1.3.8](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.8>)
   - Fix the issue that plugin cannot be used in jdk 1.8 [#371](https://github.com/kezong/fat-aar-android/issues/371)
 - [1.3.7](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.7>)
@@ -266,7 +265,7 @@ AAR是Android提供的一种官方文件形式；
 * [android-fat-aar][2]
 * [fat-aar-plugin][5]
 
-[2]: https://github.com/kezong/fat-aar-android
+[1]: https://github.com/kezong/fat-aar-android
 [2]: https://github.com/adwiv/android-fat-aar
 [3]: https://developer.android.com/studio/projects/android-library.html#aar-contents
 [4]: https://developer.android.com/studio/releases/gradle-plugin.html
