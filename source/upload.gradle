@@ -40,7 +40,7 @@ publishing {
             // Self-explanatory metadata for the most part
             pom {
                 name = PUBLISH_ARTIFACT_ID
-                description = 'A gradle plugin that merge dependencies into the final aar file works with AGP 8.2.2 Gradle 8.2.1'
+                description = 'A gradle plugin that merge dependencies into the final aar file works with AGP 8.2.2 & Gradle 8.2.1~8.14.2'
                 // If your project has a dedicated site, use its URL here
                 url = 'https://github.com/shenghua-ok/fat-aar-android'
                 licenses {

@@ -24,7 +24,7 @@ publishing {
             artifact javadocJar
             pom {
                 name = PUBLISH_ARTIFACT_ID
-                description = 'A gradle plugin that merges dependencies into the final aar file works with AGP 8.2.2 Gradle 8.2.1'
+                description = 'A gradle plugin that merges dependencies into the final aar file works with AGP 8.2.2 & Gradle 8.2.1~8.14.2'
                 url = 'https://github.com/shenghua-ok/fat-aar-android'
                 licenses {
                     license {
