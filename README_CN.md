@@ -1,6 +1,6 @@
 # fat-aar-android
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kezong/fat-aar-android/blob/master/LICENSE)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.kezong/fat-aar/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.kezong/fat-aar)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/shenghua-ok/fat-aar-android/blob/master/LICENSE)
+[![](https://jitpack.io/v/shenghua-ok/fat-aar-android.svg)](https://jitpack.io/#shenghua-ok/fat-aar-android)
 
 >**因为我不再从事研发工作，所以该仓库将不再进行维护和更新。<br>**
 >**你可以尝试按底下的步骤引入该插件，如果它在新的gradle版本中无法工作，你可以fork或者下载该仓库并且修改它，该项目的代码并不是很复杂。**
@@ -14,7 +14,7 @@
 
 #### 第一步: Apply classpath
 ##### 添加以下代码到你工程根目录下的`build.gradle`文件中:
-For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.3)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.4)):
 ```groovy
 buildscript {
     repositories {
@@ -22,7 +22,7 @@ buildscript {
         maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.3'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.4'
     }
 }
 ```
@@ -147,12 +147,13 @@ AAR是Android提供的一种官方文件形式；
 | 1.3.4 | 3.0.0 - 4.1.0 | 4.9+ |
 | 1.3.6 | 3.0.0 - 4.2.0 | 4.9+ |
 | 1.3.8 | 3.0.0+ | 4.9+ |
-| 1.4.3 | 8.2.2 | 8.2.1 - 8.14.2 |
+| 1.4.2 | 8.2.2 | 8.2.1 |
+| 1.4.4 | 8.2.2 | 8.2.1 - 8.14.2 |
 
 [Gradle Plugin和所需求的Gradle版本官方文档](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## 更新日志
-- [1.4.3](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.3>)
+- [1.4.4](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.4>)
   - Compatible with Gradle from 8.2.1 to 8.14.2.
 - [1.4.2](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2>)
   - Compatibility with AGP 8.2.2 and Gralde8.2.1
