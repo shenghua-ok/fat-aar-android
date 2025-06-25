@@ -14,6 +14,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskDependency
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
+import org.gradle.internal.component.local.model.PublishArtifactLocalArtifactMetadata
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -289,6 +290,12 @@ class VariantProcessor {
                 taskDep = artifact.buildDependencies
             } else if (artifact.metaClass.hasProperty(artifact, 'builtBy')) {
                 taskDep = artifact.builtBy
+            } else if (artifact.metaClass.hasProperty(artifact, 'id')) {
+                def artiId = artifact.getId()
+                if (artiId instanceof PublishArtifactLocalArtifactMetadata) {
+                    def metadata = (PublishArtifactLocalArtifactMetadata) artiId
+                    taskDep = metadata.buildDependencies
+                }
             }
         } catch (Exception ignore) {
             ignore.printStackTrace()
