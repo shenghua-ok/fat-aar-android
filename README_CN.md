@@ -1,20 +1,15 @@
 # fat-aar-android
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kezong/fat-aar-android/blob/master/LICENSE)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.kezong/fat-aar/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.kezong/fat-aar)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/shenghua-ok/fat-aar-android/blob/master/LICENSE)
+[![](https://jitpack.io/v/shenghua-ok/fat-aar-android.svg)](https://jitpack.io/#shenghua-ok/fat-aar-android)
 
->**因为我不再从事研发工作，所以该仓库将不再进行维护和更新。<br>**
->**你可以尝试按底下的步骤引入该插件，如果它在新的gradle版本中无法工作，你可以fork或者下载该仓库并且修改它，该项目的代码并不是很复杂。**
->
->**P.S. 希望Google官方能够尽快支持该功能**
-
-该插件提供了将library以及它依赖的library一起打包成一个完整aar的解决方案，支持AGP 8.2.2 和Gradle 8.2.1 ~ 8.14.2
+该插件提供了将library以及它依赖的library一起打包成一个完整aar的解决方案，支持AGP 8.2.2 搭配 Gradle wrapper 8.2.1 ~ 8.14.2
 ##### 注意：你如果想要使用8.0以下的版本，请访问原作者仓库：https://github.com/kezong/fat-aar-android
 
 ## 如何使用
 
 #### 第一步: Apply classpath
 ##### 添加以下代码到你工程根目录下的`build.gradle`文件中:
-For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.3)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.5)):
 ```groovy
 buildscript {
     repositories {
@@ -22,7 +17,7 @@ buildscript {
         maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.3'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.5'
     }
 }
 ```
@@ -129,123 +124,22 @@ AAR是Android提供的一种官方文件形式；
 - [x] DataBinding合并
 - [x] Proguard合并
 - [x] Kotlin module合并
+- [x] 支持 androidx.navigation
 
 ## Gradle版本支持
 
 | Version | Gradle Plugin | Gradle |
 | :--------: | :--------:|:-------:|
-| 1.0.1 | 3.1.0 - 3.2.1 | 4.4 - 6.0 |
-| 1.1.6 | 3.1.0 - 3.4.1 | 4.4 - 6.0 |
-| 1.1.10| 3.0.0 - 3.4.1 | 4.1 - 6.0 |
-| 1.2.6 | 3.0.0 - 3.5.0 | 4.1 - 6.0 |
-| 1.2.8 | 3.0.0 - 3.5.9 | 4.1 - 6.8 |
-| 1.2.11 - 1.2.14 | 3.0.0 - 3.6.9 | 4.1 - 6.8 |
-| 1.2.15 - 1.2.16 | 3.0.0 - 4.0.2 | 4.1 - 6.8 |
-| 1.2.17 | 3.0.0 - 4.0.2 | 4.9 - 6.8 |
-| 1.2.18+ | 3.0.0 - 4.1.0 | 4.9 - 6.8 |
-| 1.3.+ | 3.0.0 - 4.1.0 | 4.9 - 6.8 |
-| 1.3.4 | 3.0.0 - 4.1.0 | 4.9+ |
-| 1.3.6 | 3.0.0 - 4.2.0 | 4.9+ |
-| 1.3.8 | 3.0.0+ | 4.9+ |
-| 1.4.3 | 8.2.2 | 8.2.1 - 8.14.2 |
+| 1.4.5 | 8.2.2 | 8.2.1 - 8.14.2 |
+
+- [If under AGP_Gradle8.0 please Visit here](<https://github.com/kezong/fat-aar-android>)
 
 [Gradle Plugin和所需求的Gradle版本官方文档](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## 更新日志
-- [1.4.3](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.3>)
-  - Compatible with Gradle from 8.2.1 to 8.14.2.
-- [1.4.2](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.2>)
-  - Compatibility with AGP 8.2.2 and Gralde8.2.1
-  - Compatible with androidx.Navigation component.
-- [1.3.8](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.8>)
-  - Fix the issue that plugin cannot be used in jdk 1.8 [#371](https://github.com/kezong/fat-aar-android/issues/371)
-- [1.3.7](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.7>)
-  - Fix productFlavor detection in embed submodules [#348](https://github.com/kezong/fat-aar-android/issues/348)
-  - Support missingDimensionStrategy without productFlavors in current project. [#343](https://github.com/kezong/fat-aar-android/issues/343)
-- [1.3.5](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.5>)
-  - 修复在仅有jar工程时jar无法合并的问题. [#255](https://github.com/kezong/fat-aar-android/issues/255) [#288](https://github.com/kezong/fat-aar-android/issues/288)
-  - 修复在使用Gradle 6.0-6.8时的编译错误. [#277](https://github.com/kezong/fat-aar-android/issues/277)
-- [1.3.4](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.4>)
-  - 支持Gradle 6.8 [#274](https://github.com/kezong/fat-aar-android/issues/274)
-- [1.3.3](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.3>)
-  - 修复异常"Can not find task bundleDebugAar". [#84](https://github.com/kezong/fat-aar-android/issues/84)
-  - 修复当工程解析失败时产生的异常.
-  - 当AndroidManifest合并时抛出异常.
-- [1.3.1](<https://github.com/kezong/fat-aar-android/releases/tag/v1.3.1>)
-  - R.class合并采用Transform，解决大部分R class找不到的问题.
-  - 支持consumerProguardFiles合并
-  - 支持kotlin_module合并，支持top-level机制
-  - 支持flavor中missingDimensionStrategy
-  - 修复依赖的flavor产物更名后无法找到的问题
-  - 修复AGP 3.0 - 3.1 Jar包无法合并的问题
-  - 修复某些情况下AGP版本获取不到的问题
-- [1.2.20](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.20>)
-  - 修复获取产物名时的空指针异常. [#214](https://github.com/kezong/fat-aar-android/issues/214)
-  - r-classes.jar重命名，加上包名作为前缀.
-- [1.2.19](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.19>)
-  - 支持embed没有class.jar的aar [#157](https://github.com/kezong/fat-aar-android/issues/158)
-  - 支持embed没有AndroidManifest.xml的aar [#206](https://github.com/kezong/fat-aar-android/issues/206)
-  - 修复上传至maven时，R.class未包含进aar的BUG [#200](https://github.com/kezong/fat-aar-android/issues/200)
-- [1.2.18](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.18>)
-  - 适配gradle plugin 4.1.0 [#201](https://github.com/kezong/fat-aar-android/issues/201)
-- [1.2.17](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.17>)
-  - 支持databinding合并 [#25](https://github.com/kezong/fat-aar-android/issues/25) [#67](https://github.com/kezong/fat-aar-android/issues/67) [#142](https://github.com/kezong/fat-aar-android/issues/142)
-  - Use Gradle's configuration avoidance APIs [#195](https://github.com/kezong/fat-aar-android/issues/195)
-  - Support incremental build [#199](https://github.com/kezong/fat-aar-android/issues/199) [#185](https://github.com/kezong/fat-aar-android/issues/185)
-  - Fix wrong directory for aar's jar libs [#154](https://github.com/kezong/fat-aar-android/issues/154)
-- [1.2.16](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.16>)
-  - 修复gradle plugin版本不在根目录下就找不到的问题 [#172](https://github.com/kezong/fat-aar-android/issues/172)
-  - 修复在gradle plugin 4.0构建的产物中有可能styleable资源找不到的问题 [#163](https://github.com/kezong/fat-aar-android/issues/163)
-- [1.2.15](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.15>)
-  - 支持gradle plugin 4.0.0 [#147](https://github.com/kezong/fat-aar-android/issues/147)
-  - 修复在Android Studio 4.0.0上embed的库无法直接索引源码的问题 [#148](https://github.com/kezong/fat-aar-android/issues/148)
-  - 修复lint编译错误 [#152](https://github.com/kezong/fat-aar-android/issues/152)
-- [1.2.12](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.12>)
-  - 添加对buildType以及flavor的支持，例如debugEmbed以及flavorEmbed. [#135](https://github.com/kezong/fat-aar-android/issues/135) [#137](https://github.com/kezong/fat-aar-android/issues/137)
-  - 修复一些编译时的warning.
-- [1.2.11](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.11>)
-  - 修复在gradle plugin 3.6.0下编译variants会error的情况 [#126](https://github.com/kezong/fat-aar-android/issues/126)
-  - 修复在gradle plugin 3.6.0下编译出来的aar，在编译apk时会出现资源符号对象找不到的问题
-- [1.2.9](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.8>)
-  - 适配gradle plugin 3.6.1 [#120](https://github.com/kezong/fat-aar-android/issues/120)
-- [1.2.8](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.8>)
-  - 适配gradle6.0+版本 [#97](https://github.com/kezong/fat-aar-android/issues/97)
-- [1.2.7](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.7>)
-  - 修复在3.5.0中androidmafest合并报错的问题 [#62](https://github.com/kezong/fat-aar-android/issues/62) [#65](https://github.com/kezong/fat-aar-android/issues/65)
-- [1.2.6](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.6>)
-  - 适配gradle plugin 3.5.0 [#53](https://github.com/kezong/fat-aar-android/issues/53)[#58](https://github.com/kezong/fat-aar-android/issues/58)
-- [1.2.5](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.5>)
-  - 修复任务名称重复导致编译错误的问题 [#48](https://github.com/kezong/fat-aar-android/issues/48)
-  - 如果开启minifyEnabled，所有的jar包将合入classes.jar文件
-- [1.2.4](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.4>)
-  - 修复在windows平台上，jni和asset无法打入aar的bug [#11](https://github.com/kezong/fat-aar-android/issues/37) [#37](https://github.com/kezong/fat-aar-android/issues/35)
-- [1.2.3](<https://github.com/kezong/fat-aar-android/releases/tag/v1.2.3>)
-  - 修复未直接依赖的R类找不到的问题 [#11](https://github.com/kezong/fat-aar-android/issues/11) [#35](https://github.com/kezong/fat-aar-android/issues/35)
-  - 不再需要为需要`embed`的依赖项主动添加`compileOnly`
-  - `embed`的transitive默认值设置成false
-- [1.1.11](<https://github.com/kezong/fat-aar-android/releases/tag/v1.1.11>)
-  - 修复gradle plugin version有可能判断错误的问题 [#28](https://github.com/kezong/fat-aar-android/issues/28)
-  - 修复LibraryManifestMerger.java中出现的build warning [#29](https://github.com/kezong/fat-aar-android/issues/29)
-  - 优化resource、assets、jni等的合并规则，不再合并至"main"，而是合并至"variant" [#27](https://github.com/kezong/fat-aar-android/issues/27)
-  - 修复重复build造成release包下jni丢失的问题 [#27](https://github.com/kezong/fat-aar-android/issues/27)
-- [1.1.10](<https://github.com/kezong/fat-aar-android/releases/tag/v1.1.10>)
-  - 修复使用gradle plugin 3.0.1时的jar合并错误 [#24](https://github.com/kezong/fat-aar-android/issues/24)
-  - 修复无法正常rebuild（同时使用clean assemble）的问题 [#24](https://github.com/kezong/fat-aar-android/issues/24)
-- [1.1.8](<https://github.com/kezong/fat-aar-android/releases/tag/v1.1.8>)
-  - 弃用旧接口，处理编译时输出的warning [#10](https://github.com/kezong/fat-aar-android/issues/10)
-  - 将AndroidManifest的合并规则由Application改为Library [#21](https://github.com/kezong/fat-aar-android/issues/21) [#23](https://github.com/kezong/fat-aar-android/issues/23)
-- [1.1.7](<https://github.com/kezong/fat-aar-android/releases/tag/v1.1.7>)
-  - 修复直接publish至maven时，aar的R文件未合并的问题 [#7](https://github.com/kezong/fat-aar-android/issues/7)
-- [1.1.6](<https://github.com/kezong/fat-aar-android/releases/tag/v1.1.6>)
-  - 适配gradle plugin 3.3.0+ [#4](https://github.com/kezong/fat-aar-android/issues/4) [#9](https://github.com/kezong/fat-aar-android/issues/9)
-  - 适配gadle 4.10.0+ [#8](https://github.com/kezong/fat-aar-android/issues/8)
-  - 支持子module的flavor编译
-  - 修复子module的class文件编译不实时更新的问题
-- [1.0.3](<https://github.com/kezong/fat-aar-android/releases/tag/v1.0.3>)
-  - 修复assets未合并的问题
-- [1.0.1](<https://github.com/kezong/fat-aar-android/releases/tag/v1.0.1>)
-  - 支持gradle plugin 3.1.0 - 3.2.1
-  - 支持资源合并，R文件合并
+- [1.4.5](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.5>)
+  - Compatible with AGP 8.2.2 and Gradle wrapper from 8.2.1 to 8.14.2
+  - Compatible with androidx.navigation component.
   
 ## 常见问题
 
