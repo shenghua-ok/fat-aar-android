@@ -1,11 +1,12 @@
 package com.kezong.fataar
 
-import com.android.build.gradle.api.LibraryVariant
-import com.android.build.gradle.tasks.ManifestProcessorTask
+import com.android.build.api.variant.LibraryVariant
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 
 import java.lang.reflect.Field
@@ -61,28 +62,34 @@ class VersionAdapter {
     }
 
     Task getJavaCompileTask() {
-        if (FatUtils.compareVersion(AGPVersion, "3.3.0") >= 0) {
+        if (FatUtils.compareVersion(AGPVersion, "8.0.0") >= 0) {
+            def taskName = "compile${mVariant.name.capitalize()}JavaWithJavac"
+            return mProject.tasks.named(taskName).get()
+        } else if (FatUtils.compareVersion(AGPVersion, "3.3.0") >= 0) {
             return mVariant.getJavaCompileProvider().get()
         } else {
             return mVariant.getJavaCompiler()
         }
     }
 
-    ManifestProcessorTask getProcessManifest() {
-        if (FatUtils.compareVersion(AGPVersion, "3.3.0") >= 0) {
-            return mVariant.getOutputs().first().getProcessManifestProvider().get()
-        } else {
-            return mVariant.getOutputs().first().getProcessManifest()
-        }
-    }
-
-    Task getMergeAssets() {
-        if (FatUtils.compareVersion(AGPVersion, "3.3.0") >= 0) {
-            return mVariant.getMergeAssetsProvider().get()
-        } else {
-            return mVariant.getMergeAssets()
-        }
-    }
+//    ManifestProcessorTask getProcessManifest() {
+//        if (FatUtils.compareVersion(AGPVersion, "8.0.0") >= 0) {
+//            def manifestTaskName = "process${variant.name.capitalize()}LibraryManifest"
+//            def manifestTaskProvider = mProject.tasks.named(manifestTaskName)
+//        }else if (FatUtils.compareVersion(AGPVersion, "3.3.0") >= 0) {
+//            return mVariant.getOutputs().first().getProcessManifestProvider().get()
+//        } else {
+//            return mVariant.getOutputs().first().getProcessManifest()
+//        }
+//    }
+//
+//    Task getMergeAssets() {
+//        if (FatUtils.compareVersion(AGPVersion, "3.3.0") >= 0) {
+//            return mVariant.getMergeAssetsProvider().get()
+//        } else {
+//            return mVariant.getMergeAssets()
+//        }
+//    }
 
     /**
      * return symbol file without remote resources
@@ -147,5 +154,9 @@ class VersionAdapter {
             Field version = aClass.getDeclaredField("ANDROID_GRADLE_PLUGIN_VERSION")
             return version.get(aClass)
         }
+    }
+
+    static Provider<RegularFile> getRMappingJsonProvider(Project project) {
+        return project.layout.buildDirectory.file("tmp/r_classes_mapping.json")
     }
 }

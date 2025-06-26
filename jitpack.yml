@@ -1,0 +1,8 @@
+jdk:
+  - openjdk17
+
+before_install:
+  - cd source
+
+install:
+  - ./gradlew publishToMavenLocal

@@ -3,10 +3,11 @@ package com.kezong.fataar
 import org.gradle.api.Project
 
 class FatUtils {
-
+    private static def logCollection = new HashSet<String>()
     private static Project sProject
 
     def static attach(Project p) {
+        logCollection.clear()
         sProject = p
     }
 
@@ -20,6 +21,15 @@ class FatUtils {
 
     def static logAnytime(def msg) {
         sProject.println("[fat-aar]${msg}")
+    }
+
+    def static logInLoop(def msg) {
+        def msgLocal = msg.toString()
+        if (logCollection.contains(msgLocal)) {
+            return
+        }
+        logCollection.add(msgLocal)
+        sProject.println("[fat-aar]${msgLocal}")
     }
 
     def static showDir(int indent, File file) throws IOException {
