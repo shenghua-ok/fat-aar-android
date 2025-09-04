@@ -25,4 +25,6 @@ class FatAarExtension {
      * @since 1.3.0
      */
     boolean transitive = false
+    //@since 1.4.6 & AGP 8.0+
+    boolean keepR8Verify = false
 }

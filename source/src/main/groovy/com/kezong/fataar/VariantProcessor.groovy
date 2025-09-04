@@ -672,9 +672,13 @@ class VariantProcessor {
 
 
     private void processCompatibleWith8() {
+        if(mProject.fataar.keepR8Verify){
+            return
+        }
         processMapSourceSetPathsTask()
         processVerifyReleaseSources()
         processGenSafeArgsTask()
+        processExtractDeepLinksTask()
     }
 
     private void processMapSourceSetPathsTask() {
@@ -699,6 +703,16 @@ class VariantProcessor {
 
     private void processGenSafeArgsTask() {
         String taskName = "generateSafeArgs${mVariant.name.capitalize()}"
+        if (!mProject.tasks.names.contains(taskName)) {
+            return
+        }
+        TaskProvider genSafeArgsTask = mProject.tasks.named(taskName)
+        genSafeArgsTask.configure {
+            dependsOn(mExplodeTasks)
+        }
+    }
+    private void processExtractDeepLinksTask() {
+        String taskName = "extractDeepLinksForAar${mVariant.name.capitalize()}"
         if (!mProject.tasks.names.contains(taskName)) {
             return
         }

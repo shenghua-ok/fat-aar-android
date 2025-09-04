@@ -24,7 +24,10 @@ class VersionAdapter {
 
     ConfigurableFileCollection getClassPathDirFiles() {
         ConfigurableFileCollection classpath
-        if (FatUtils.compareVersion(AGPVersion, "3.5.0") >= 0) {
+        if (FatUtils.compareVersion(AGPVersion, "8.3.0") >= 0) {
+            classpath = mProject.files("${mProject.buildDir.path}/intermediates/" +
+                    "javac/${mVariant.name}/compile${mVariant.name.capitalize()}JavaWithJavac/classes")
+        } else if (FatUtils.compareVersion(AGPVersion, "3.5.0") >= 0) {
             classpath = mProject.files("${mProject.buildDir.path}/intermediates/" +
                     "javac/${mVariant.name}/classes")
         } else if (FatUtils.compareVersion(AGPVersion, "3.2.0") >= 0) { // >= Versions 3.2.X
@@ -52,7 +55,9 @@ class VersionAdapter {
     }
 
     File getLibsDirFile() {
-        if (FatUtils.compareVersion(AGPVersion, '3.6.0') >= 0) {
+        if (FatUtils.compareVersion(AGPVersion, '8.3.0') >= 0) {
+            return mProject.file("${mProject.buildDir.path}/intermediates/aar_libs_directory/${mVariant.name}/sync${mVariant.name.capitalize()}LibJars/libs")
+        } else if (FatUtils.compareVersion(AGPVersion, '3.6.0') >= 0) {
             return mProject.file("${mProject.buildDir.path}/intermediates/aar_libs_directory/${mVariant.name}/libs")
         } else if (FatUtils.compareVersion(AGPVersion, '3.1.0') >= 0) {
             return mProject.file(mProject.buildDir.path + '/intermediates/packaged-classes/' + mVariant.dirName + "/libs")

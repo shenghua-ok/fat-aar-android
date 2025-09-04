@@ -5,15 +5,17 @@
 
 - [中文文档](./README_CN.md)
 
-The solution of merging aar works with [AGP][8.2.2] and Gradle wrapper from 8.2.1 ~ 8.14.2
-
+The solution of merging aar works with AGP 8.2.0+ and Gradle wrapper from 8.2.0～8.14.2
+#### 1. AGP[8.2.0] (Verified)
+#### 2. AGP[8.3.0] (Verified)
+#### 2. AGP[8.7.3] (Verified)
 ##### Alert: if you want to use fat-aar under AGP8.0(means 3.0~8.0-),please visit original author's repo:https://github.com/kezong/fat-aar-android
 
 ## Getting Started
 
 ### Step 1: Add classpath
 #### Add snippet below to your root build script file:
-For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.5)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.6)):
 ```groovy
 buildscript {
     repositories {
@@ -21,7 +23,7 @@ buildscript {
         maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.5'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.6'
     }
 }
 ```
@@ -78,6 +80,12 @@ fataar {
      * @since 1.3.0
      */
     transitive = true
+    /**
+     * If keepR8Verify is true, the fat-aar will keep R8's default behivior of checking first(since AGP8.0+) when sync or bundle an AAR .
+     * default: false | disable R8 checking tasks for compitibility and compiling passed.
+     * @since 1.4.6 
+     */
+    keepR8Verify = false
 }
 ```
 If you change the transitive value to true,and want to ignore a dependency in its POM file, you can add exclude keywords, like this:
@@ -118,7 +126,8 @@ See [anatomy of an aar file here][2].
 ## Gradle Version Support
 | Version | Gradle Plugin | Gradle |
 | :--------: | :--------:|:-------:|
-| 1.4.5 | 8.2.2 | 8.2.1 - 8.14.2 |
+| 1.4.6 | 8.2.0+ | 8.2.0 - 8.14.2 |
+| 1.4.5 | 8.2.x | 8.2.0 - 8.14.2 |
 
 - [If under AGP_Gradle8.0 Visit here](<https://github.com/kezong/fat-aar-android>)
 
@@ -128,8 +137,10 @@ The following link which version of Gradle is required for each version of the A
 [Plugin version and Required Gradle version](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## Version Log
+- [1.4.6](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.6>)
+  - Fix bug:It didn't compatible with AGP 8.3.0+
 - [1.4.5](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.5>)
-  - Compatible with AGP 8.2.2 and Gradle wrapper from 8.2.1 to 8.14.2
+  - Compatible with AGP 8.2.x and Gradle wrapper from 8.2.0 to 8.14.2
   - Compatible with androidx.navigation component.
 
 ## Known Defects or Issues

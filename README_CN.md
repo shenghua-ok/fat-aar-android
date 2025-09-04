@@ -2,14 +2,17 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/shenghua-ok/fat-aar-android/blob/master/LICENSE)
 [![](https://jitpack.io/v/shenghua-ok/fat-aar-android.svg)](https://jitpack.io/#shenghua-ok/fat-aar-android)
 
-该插件提供了将library以及它依赖的library一起打包成一个完整aar的解决方案，支持AGP 8.2.2 搭配 Gradle wrapper 8.2.1 ~ 8.14.2
+该插件提供了将library以及它依赖的library一起打包成一个完整aar的解决方案，理论上已经支持 AGP 8.2.0+ 搭配 Gradle wrapper 8.2.0 ~ 8.14.2
+#### 1. AGP 8.2.0（自测过）
+#### 2. AGP 8.3.0（自测过）
+#### 3. AGP 8.7.3 (自测过）
 ##### 注意：你如果想要使用8.0以下的版本，请访问原作者仓库：https://github.com/kezong/fat-aar-android
 
 ## 如何使用
 
 #### 第一步: Apply classpath
 ##### 添加以下代码到你工程根目录下的`build.gradle`文件中:
-For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.5)):
+For Maven Central (The lastest release is available on [Jitpack Central](https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.6)):
 ```groovy
 buildscript {
     repositories {
@@ -17,7 +20,7 @@ buildscript {
         maven { url "https://jitpack.io" }
     }
     dependencies {
-        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.5'
+        classpath 'com.github.shenghua-ok:fat-aar-android:1.4.6'
     }
 }
 ```
@@ -90,6 +93,12 @@ fataar {
      * @since 1.3.0
      */
     transitive = true
+   /**
+     * If keepR8Verify is true, the fat-aar will keep R8's default behivior of checking first(since AGP8.0+) when sync or bundle an AAR .
+     * default: false | disable R8 checking tasks for compitibility and compiling passed.
+     * @since 1.4.6 
+     */
+    keepR8Verify = false
 }
 ```
 
@@ -130,15 +139,18 @@ AAR是Android提供的一种官方文件形式；
 
 | Version | Gradle Plugin | Gradle |
 | :--------: | :--------:|:-------:|
-| 1.4.5 | 8.2.2 | 8.2.1 - 8.14.2 |
+| 1.4.6 | 8.2.0+ | 8.2.0 - 8.14.2 |
+| 1.4.5 | 8.2.x | 8.2.0 - 8.14.2 |
 
 - [If under AGP_Gradle8.0 please Visit here](<https://github.com/kezong/fat-aar-android>)
 
 [Gradle Plugin和所需求的Gradle版本官方文档](https://developer.android.google.cn/studio/releases/gradle-plugin.html)
 
 ## 更新日志
+- [1.4.6](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.6>)
+  - Fix bug:It didn't compatible with AGP 8.3.0+
 - [1.4.5](<https://jitpack.io/#shenghua-ok/fat-aar-android/1.4.5>)
-  - Compatible with AGP 8.2.2 and Gradle wrapper from 8.2.1 to 8.14.2
+  - Compatible with AGP 8.2.x and Gradle wrapper from 8.2.0 to 8.14.2
   - Compatible with androidx.navigation component.
   
 ## 常见问题
